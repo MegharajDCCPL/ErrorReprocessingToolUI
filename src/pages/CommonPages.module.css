@@ -1,0 +1,14 @@
+.btn {
+  background-color: transparent !important;
+  color: var(--clr-blue) !important;
+}
+
+.btn:hover,
+.btn-active:hover {
+  background-color: var(--clr--bootstrap-btn) !important;
+  color: var(--clr-white) !important;
+}
+
+.btn-active {
+  background-color: var(--clr--bootstrap-btn) !important;
+}

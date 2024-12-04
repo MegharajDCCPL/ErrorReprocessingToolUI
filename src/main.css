@@ -1,0 +1,157 @@
+:root {
+  --clr--bootstrap-btn: #0d6efd;
+  --clr-green-3: #17424c;
+  --clr-blue: #2083c6;
+  --clr-blue-2: #0056b3;
+  --clr-blue-3: #0f5588;
+  --clr-black: #000000;
+  --clr-white: #ffffff;
+  --clr-red: #c92525;
+  --clr-grey: #eef1f5;
+  --clr-dark-grey: #576f72;
+  --clr-medium-grey: #cfd2cf;
+  --clr-light-grey: #f9f9f9;
+  --home-background-color: #ecf0f4;
+  --clr-text-dark-grey: #31363f;
+  --clr-control-border: #dee2e6;
+  /* Font-Weight */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semi-bold: 550;
+  --fw-bold: 700;
+
+  --sidebar-background-color: #0e282e;
+
+  --ff-primary: "Inter", sans-serif;
+  --ff-body: var(--ff-primary);
+  --clr-green-6: #3391a6;
+}
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin */
+* {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+}
+
+/* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* Set core root defaults */
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+/* Set html and body defaults */
+html,
+body {
+  height: 100%;
+}
+
+/* Set core body defaults */
+body {
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  font-family: var(--ff-body);
+  font-size: 16px;
+  color: var(--clr-text-dark-grey);
+}
+
+/* overriding bootstrap tag styling */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+ul,
+li {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* A elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px var(--clr-dark-grey);
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--clr-green-6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0);
+}
+
+/* added this class to fix height to control */
+.control-fixed-height {
+  height: 4rem;
+}
+
+/* adding custom css for checkbox */
+/* #custom-checkbox,
+#ndo-header-custom-checkbox,
+#ndo-custom-checkbox,
+#ndo-matrix-custom-checkbox,
+#rdo-header-custom-checkbox,
+#rdo-custom-checkbox,
+#rdo-matrix-custom-checkbox,
+#get-designer-cdoName-checkbox {
+  height: 1.5rem !important;
+  width: 1.5rem !important;
+  margin-top: 0.1rem;
+} */
+
+/* BL specific CSS*/
+#root {
+  height: 100%;
+}
+
+.module-header {
+  color: var(--clr-dark-grey);
+}
+.custom-modal-header {
+  padding: 8px 20px 5px 10px !important;
+}
+.custom-modal-title {
+  font-size: 18px;
+  margin-bottom: 4px;
+  margin-left: 3px;
+}
+.custom-modal-body-radius {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: auto;
+  max-height: calc(115vh - 200px);
+}
+.custom-modal-body {
+  overflow: auto;
+  max-height: calc(100vh - 200px);
+}
+.custom-modal-footer {
+  padding: 5px 20px 5px 20px !important;
+}
