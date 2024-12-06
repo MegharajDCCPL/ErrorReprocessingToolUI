@@ -26,6 +26,20 @@ const SideNavbar = () => {
           <img className={`${styles["icon"]}`} src={""} />
           <NavLink to="/reprocess">Reprocess</NavLink>
         </li>
+        <li
+          className={`${styles["active-link"]}`}
+          onClick={() => handleNavLinkClick("close")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/close">Close</NavLink>
+        </li>
+        <li
+          className={`${styles["active-link"]}`}
+          onClick={() => handleNavLinkClick("archive")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/archive">Archived</NavLink>
+        </li>
       </ul>
     </div>
   );
