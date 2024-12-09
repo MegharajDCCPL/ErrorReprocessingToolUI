@@ -1,0 +1,85 @@
+.fromDateLabel {
+  margin-top: 0.4rem;
+  margin-right: 0.5rem;
+}
+.toDateLabel {
+  margin-right: 0.5rem;
+  margin-left: -6rem;
+}
+.label {
+  margin-right: 0.5rem;
+  margin-left: -7rem;
+  margin-top: 0.4rem;
+}
+
+.custom-modal {
+  max-width: 60rem !important;
+  max-height: 55rem !important;
+}
+.custom-modal-body {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: auto;
+  max-height: calc(115vh - 200px);
+}
+
+.headings {
+  text-align: center;
+}
+
+.graphs {
+  display: flex;
+  flex-direction: row;
+  /* gap: 2rem; */
+  border: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 7px;
+  padding: 1rem;
+
+  flex-wrap: wrap;
+  transition: transform 0.3s ease;
+}
+
+.chart-label {
+  text-align: center;
+  color: #000000;
+  font-size: large;
+  font-weight: bolder;
+  border-radius: 0.5rem;
+  margin-top: 4rem !important;
+}
+
+.pie-chart,
+.bar-chart {
+  /* Adjusted line-chart to bar-chart */
+  border-radius: 5px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.pie-chart {
+  width: 40%;
+  height: 20rem;
+}
+
+.bar-chart {
+  width: 60%;
+  height: 20rem;
+}
+
+@media (min-width: 320px) and (max-width: 480px),
+  (min-width: 480px) and (max-width: 720px) {
+  .pie-chart {
+    width: 100%;
+    height: 16rem; /* Adjusted height */
+  }
+
+  .bar-chart {
+    width: 100%;
+    height: 16rem; /* Adjusted height */
+  }
+}

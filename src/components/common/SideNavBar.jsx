@@ -28,6 +28,20 @@ const SideNavbar = () => {
         </li>
         <li
           className={`${styles["active-link"]}`}
+          onClick={() => handleNavLinkClick("close")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/close">Close</NavLink>
+        </li>
+        <li
+          className={`${styles["active-link"]}`}
+          onClick={() => handleNavLinkClick("archive")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/archive">Archived</NavLink>
+        </li>
+        <li
+          className={`${styles["active-link"]}`}
           onClick={() => handleNavLinkClick("settings")}
         >
           <img className={`${styles["icon"]}`} src={""} />
