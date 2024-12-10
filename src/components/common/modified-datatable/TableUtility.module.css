@@ -1,6 +1,7 @@
 .tab-body {
   margin-top: 1rem;
   width: 100%;
+  overflow: auto;
 }
 
 .tab-body table {

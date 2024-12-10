@@ -50,7 +50,7 @@ const ChartsComponent = () => {
             (dummyPieData.Product / total) * 100,
             (dummyPieData.mfgOrder / total) * 100,
           ],
-          backgroundColor: ["#8BC1F7", "#06C"],
+          backgroundColor: ["#5C6BC0", "#66BB6A"],
           borderColor: ["#FFFFFF"],
           borderWidth: 2,
           hoverOffset: 4,
@@ -95,20 +95,20 @@ const ChartsComponent = () => {
         {
           label: "Product Error Count",
           data: dummyBarData.errorCounts.Product.reverse(),
-          backgroundColor: "#77a2ff",
-          borderColor: "#447feb",
+          backgroundColor: "#5C6BC0", // A clean blue shade for the Product dataset
+          borderColor: "#1565C0", // Darker blue border for better contrast
           borderWidth: 2,
-          hoverBackgroundColor: "#447feb",
+          hoverBackgroundColor: "#5C6BC0",
           hoverBorderColor: "#fff",
           barThickness: 30,
         },
         {
           label: "Mfg Order Error Count",
           data: dummyBarData.errorCounts.MfgOrder.reverse(),
-          backgroundColor: "#77a2ff",
-          borderColor: "#447feb",
+          backgroundColor: "#43A047", // Professional green for Mfg Order dataset
+          borderColor: "#2C6B2F", // Darker green border for contrast
           borderWidth: 2,
-          hoverBackgroundColor: "#447feb",
+          hoverBackgroundColor: "#2C6B2F", // Darker green for hover effect
           hoverBorderColor: "#fff",
           barThickness: 30,
         },
@@ -171,7 +171,7 @@ const ChartsComponent = () => {
         display: true,
         align: "end",
         anchor: "end",
-        backgroundColor: "#447feb",
+        backgroundColor: "#5C6BC0",
         borderRadius: 4,
         color: "#fff",
         font: {

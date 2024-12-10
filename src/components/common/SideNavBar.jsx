@@ -24,21 +24,21 @@ const SideNavbar = () => {
           onClick={() => handleNavLinkClick("reprocess")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/reprocess">Reprocess</NavLink>
+          <NavLink to="/reprocess">Open Items</NavLink>
         </li>
         <li
           className={`${styles["active-link"]}`}
           onClick={() => handleNavLinkClick("close")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/close">Close</NavLink>
+          <NavLink to="/close">Closed Items</NavLink>
         </li>
         <li
           className={`${styles["active-link"]}`}
           onClick={() => handleNavLinkClick("archive")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/archive">Archived</NavLink>
+          <NavLink to="/archive">Archived Data</NavLink>
         </li>
       </ul>
     </div>
