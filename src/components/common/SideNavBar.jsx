@@ -40,6 +40,13 @@ const SideNavbar = () => {
           <img className={`${styles["icon"]}`} src={""} />
           <NavLink to="/archive">Archived Data</NavLink>
         </li>
+        <li
+          className={`${styles["active-link"]}`}
+          onClick={() => handleNavLinkClick("settings")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/settings">Settings</NavLink>
+        </li>
       </ul>
     </div>
   );

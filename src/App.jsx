@@ -5,6 +5,7 @@ import DashboardPage from "./pages/dashboard/DashBoardPage";
 import ReprocessPage from "./pages/reprocess/ReprocessPage";
 import ArchivePage from "./pages/archive/ArchivePage";
 import CloseErrorsPage from "./pages/closederrors/CloseErrorsPage";
+import SettingsPage from "./pages/settings/SettingsPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="reprocess" element={<ReprocessPage />} />
           <Route path="archive" element={<ArchivePage />} />
           <Route path="close" element={<CloseErrorsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </Router>
