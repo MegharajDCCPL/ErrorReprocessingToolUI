@@ -42,7 +42,6 @@ const TableUtility = (props) => {
       });
     });
   }, [data, filters, columns]);
-  console.log("filteredData", filteredData);
 
   const handleGotoPage = (e) => {
     try {
