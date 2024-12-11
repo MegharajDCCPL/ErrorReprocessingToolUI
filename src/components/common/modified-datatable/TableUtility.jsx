@@ -9,8 +9,6 @@ import styles from "./TableUtility.module.css";
 import { useState, useEffect, useMemo } from "react";
 import { Form, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.css";
-import ErrorLogger from "../ErrorLogger";
-import FilterModal from "./FilterModal";
 
 const TableUtility = (props) => {
   const columns = useMemo(() => props.gridColumns, [props.gridColumns]);
@@ -18,62 +16,30 @@ const TableUtility = (props) => {
   const [skipPageReset, setSkipPageReset] = useState(false);
   const defaultPageSize = 10;
 
-  const [filters, setFilters] = useState({});
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const applyFilters = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  const resetFilters = () => {
-    setFilters({});
-  };
-
-  const filteredData = useMemo(() => {
-    // Apply filters to data based on user input
-    return data.filter((row) => {
-      return columns.every((column) => {
-        const filterValue = filters[column.accessor];
-        if (filterValue && row[column.accessor]) {
-          return String(row[column.accessor])
-            .toLowerCase()
-            .includes(filterValue.toLowerCase());
-        }
-        return true;
-      });
-    });
-  }, [data, filters, columns]);
-
   const handleGotoPage = (e) => {
-    try {
-      const pageNumber = e.target.value ? Number(e.target.value) - 1 : 0;
-      gotoPage(pageNumber);
-    } catch (error) {
-      ErrorLogger(error);
-    }
+    const pageNumber = e.target.value ? Number(e.target.value) - 1 : 0;
+    gotoPage(pageNumber);
   };
 
   const updateData = (rowIndex, columnId, value) => {
-    try {
-      setSkipPageReset(true);
-      props.setData((old) =>
-        old.map((row, index) => {
-          if (index === rowIndex) {
-            const updatedRow = {
-              ...old[rowIndex],
-              [columnId]: value,
-            };
+    setSkipPageReset(true);
 
-            if (props.customMethod !== undefined)
-              props.customMethod(updatedRow, columnId);
+    props.setData((old) =>
+      old.map((row, index) => {
+        if (index === rowIndex) {
+          const updatedRow = {
+            ...old[rowIndex],
+            [columnId]: value,
+          };
 
-            return updatedRow;
-          }
-          return row;
-        })
-      );
-    } catch (error) {
-      ErrorLogger(error);
-    }
+          if (props.customMethod !== undefined)
+            props.customMethod(updatedRow, columnId);
+
+          return updatedRow;
+        }
+        return row;
+      })
+    );
   };
 
   useEffect(() => {
@@ -82,26 +48,21 @@ const TableUtility = (props) => {
 
   // Custom global filter logic for wildcard search
   const globalFilterFunction = (rows, columnIds, filterValue) => {
-    try {
-      if (!filterValue) return rows;
+    if (!filterValue) return rows;
+    // Trim leading and trailing spaces from the filterValue
+    const trimmedFilterValue = filterValue.trim();
+    // Replace % and _ with regex equivalents and escape other special characters
+    const regex = new RegExp(
+      trimmedFilterValue
+        .replace(/[-\/\\^$+?.()|[\]{}]/g, "\\$&") // Escape special characters
+        .replace(/%/g, ".*") // Replace % with .*
+        .replace(/_/g, "."), // Replace _ with .
+      "i"
+    ); // "i" flag for case-insensitive matching
 
-      // Trim leading and trailing spaces from the filterValue
-      const trimmedFilterValue = filterValue.trim();
-      // Replace % and _ with regex equivalents and escape other special characters
-      const regex = new RegExp(
-        trimmedFilterValue
-          .replace(/[-\/\\^$+?.()|[\]{}]/g, "\\$&") // Escape special characters
-          .replace(/%/g, ".*") // Replace % with .*
-          .replace(/_/g, "."), // Replace _ with .
-        "i"
-      );
-
-      return rows.filter((row) =>
-        columnIds.some((columnId) => regex.test(String(row.values[columnId])))
-      );
-    } catch (error) {
-      ErrorLogger(error);
-    }
+    return rows.filter((row) =>
+      columnIds.some((columnId) => regex.test(String(row.values[columnId])))
+    );
   };
 
   const {
@@ -124,7 +85,7 @@ const TableUtility = (props) => {
   } = useTable(
     {
       columns, // your column definitions
-      data: filteredData, // your row data
+      data, // your row data
       initialState: { pageIndex: 0, pageSize: defaultPageSize }, // to set initial page
       autoResetPage: !skipPageReset,
       autoResetGlobalFilter: false,
@@ -164,31 +125,11 @@ const TableUtility = (props) => {
         </div>
         <div
           id="search-filter"
-          className="pt-2 d-flex gap-2 align-items-center justify-content-end"
+          className="pt-2 d-flex align-items-center justify-content-end"
         >
-          <Button
-            variant="outline-primary"
-            size="sm"
-            onClick={() => setShowFilterModal(true)}
-          >
-            Filter
-          </Button>
-          <Button variant="outline-secondary" size="sm" onClick={resetFilters}>
-            Reset
-          </Button>
-
-          {/* Filter Modal */}
-          <FilterModal
-            show={showFilterModal}
-            onHide={() => setShowFilterModal(false)}
-            columns={columns}
-            applyFilters={applyFilters}
-            resetFilters={resetFilters}
-          />
           <Form.Label className="mt-2 me-2">Search</Form.Label>
           <Form.Control
-            className="me-1"
-            style={{ width: "10rem" }}
+            className="me-1 w-50"
             id="txt-search-filter"
             type="text"
             name="search"
@@ -200,7 +141,8 @@ const TableUtility = (props) => {
         </div>
       </div>
       <div className={styles["table-container"]}>
-        <div className={styles["tab-body"]} style={{ overflow: "auto" }}>
+        {/* added the overflow for only table and placed the pagination btns outside of the div */}
+        <div className={styles["tab-body"]}>
           <table id="react-table" {...getTableProps()}>
             <thead>
               {headerGroups.map((headerGroup) => {

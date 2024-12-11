@@ -80,6 +80,31 @@
 
   .bar-chart {
     width: 100%;
-    height: 16rem; /* Adjusted height */
+    height: 16rem;
   }
+}
+
+.error-stats-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 8px;
+  width: 16rem;
+  background-color: #fcfcfc;
+}
+
+.stat-card-title {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  align-items: center;
 }
