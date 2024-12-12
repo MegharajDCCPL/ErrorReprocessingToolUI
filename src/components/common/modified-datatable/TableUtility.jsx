@@ -9,12 +9,23 @@ import styles from "./TableUtility.module.css";
 import { useState, useEffect, useMemo } from "react";
 import { Form, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.css";
+import RowModal from "./RowModal";
+import XMLModal from "./XMLModal"; // Add the new XMLModal import
 
 const TableUtility = (props) => {
+  const [modalShow, setModalShow] = useState(false);
+  const [xmlModalShow, setXmlModalShow] = useState(false); // State for the XML modal
+  const [selectedRowData, setSelectedRowData] = useState(null);
+  const [xmlData, setXmlData] = useState(""); // State for storing XML data
   const columns = useMemo(() => props.gridColumns, [props.gridColumns]);
   const data = useMemo(() => props.gridData, [props.gridData]);
   const [skipPageReset, setSkipPageReset] = useState(false);
   const defaultPageSize = 10;
+
+  const handleRowDoubleClick = (row) => {
+    setSelectedRowData(row.original);
+    setModalShow(true);
+  };
 
   const handleGotoPage = (e) => {
     const pageNumber = e.target.value ? Number(e.target.value) - 1 : 0;
@@ -100,6 +111,12 @@ const TableUtility = (props) => {
 
   const { globalFilter, pageIndex, pageSize } = state;
 
+  // Function to handle XML click (Show More)
+  const handleShowXML = (xmlContent) => {
+    setXmlData(xmlContent); // Set the XML content for the modal
+    setXmlModalShow(true); // Show the XML modal
+  };
+
   return (
     <>
       <div
@@ -141,7 +158,6 @@ const TableUtility = (props) => {
         </div>
       </div>
       <div className={styles["table-container"]}>
-        {/* added the overflow for only table and placed the pagination btns outside of the div */}
         <div className={styles["tab-body"]}>
           <table id="react-table" {...getTableProps()}>
             <thead>
@@ -178,12 +194,49 @@ const TableUtility = (props) => {
                 prepareRow(row);
                 const { key, ...restRowProps } = row.getRowProps();
                 return (
-                  <tr key={key} {...restRowProps}>
+                  <tr
+                    key={key}
+                    {...restRowProps}
+                    onDoubleClick={() => handleRowDoubleClick(row)}
+                  >
                     {row.cells.map((cell, index) => {
                       const { key, ...restCellProps } = cell.getCellProps();
+                      // Check if the cell value contains XML
+                      const cellValue = cell.value;
+                      const isXML =
+                        typeof cellValue === "string" &&
+                        cellValue.startsWith("<") &&
+                        cellValue.endsWith(">");
                       return (
-                        <td key={key} {...restCellProps}>
-                          {cell.render("Cell")}
+                        <td
+                          key={key}
+                          {...restCellProps}
+                          style={
+                            isXML
+                              ? {
+                                  maxWidth: "200px",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                }
+                              : {}
+                          }
+                        >
+                          {isXML ? (
+                            <>
+                              <div style={{ flex: 1, marginRight: "10px" }}>
+                                {cellValue.slice(0, 100)}...
+                              </div>
+                              <Button
+                                variant="link"
+                                onClick={() => handleShowXML(cellValue)}
+                                style={{ padding: "0", fontSize: "12px" }}
+                              >
+                                Show More
+                              </Button>
+                            </>
+                          ) : (
+                            cell.render("Cell")
+                          )}
                         </td>
                       );
                     })}
@@ -267,6 +320,16 @@ const TableUtility = (props) => {
           </span>
         </div>
       </div>
+      <RowModal
+        show={modalShow}
+        handleClose={() => setModalShow(false)}
+        rowData={selectedRowData}
+      />
+      <XMLModal
+        show={xmlModalShow}
+        handleClose={() => setXmlModalShow(false)}
+        xmlData={xmlData}
+      />
     </>
   );
 };

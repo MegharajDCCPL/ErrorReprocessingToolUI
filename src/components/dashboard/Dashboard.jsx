@@ -53,11 +53,13 @@ const Dashboard = () => {
       <div className="mt-3">
         <ChartsComponent />
       </div>
-      <TableUtility
-        gridColumns={gridColumns}
-        gridData={data}
-        pageSizes={[5, 10, 20]}
-      />
+      <div style={{ height: "76vh", overflowX: "auto" }}>
+        <TableUtility
+          gridColumns={gridColumns}
+          gridData={data}
+          pageSizes={[5, 10, 20]}
+        />
+      </div>
     </div>
   );
 };
