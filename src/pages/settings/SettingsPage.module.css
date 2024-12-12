@@ -1,0 +1,41 @@
+.user-role-form-label,
+.edit-user-role-form-label {
+  font-size: 15px !important;
+  margin-bottom: 4px;
+  margin-left: 3px;
+}
+.custom-modal-title {
+  font-size: 18px !important;
+  margin-bottom: 4px;
+  margin-left: 3px;
+}
+
+.user-role-form-control,
+.edit-user-role-form-control {
+  width: 20rem !important;
+  margin-left: 3px;
+}
+.Settings {
+  display: flex;
+  flex-direction: row;
+  /* gap: 2rem; */
+  border: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 7px;
+  padding: 1rem;
+
+  transition: transform 0.3s ease;
+}
+h5 {
+  color: #046689;
+  margin-left: 20px;
+}
+.btn-delete-icon {
+  margin-left: -0.35rem;
+  margin-top: -0.35rem;
+  width: 1.8rem;
+  height: 1rem;
+}
+.buttons {
+  height: unset !important;
+}

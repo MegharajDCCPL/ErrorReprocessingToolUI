@@ -3,9 +3,7 @@ import styles from "./MiddleContainer.module.css";
 
 const MiddleContainer = () => {
   return (
-    <div
-      className={`${styles["whole-container"]} bg-light flex-grow-1 overflow-auto p-4`}
-    >
+    <div className={`${styles["whole-container"]} bg-light flex-grow-1 p-2`}>
       <Outlet />
     </div>
   );
