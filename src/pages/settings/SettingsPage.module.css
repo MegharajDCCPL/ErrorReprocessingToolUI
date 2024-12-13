@@ -17,14 +17,28 @@
 }
 .Settings {
   display: flex;
-  flex-direction: row;
-  /* gap: 2rem; */
+  flex-direction: column;
+  gap: 2rem;
   border: 1px solid #dee2e6;
   background: #f8f9fa;
   border-radius: 7px;
   padding: 1rem;
 
   transition: transform 0.3s ease;
+  /* width: unset !important; */
+}
+
+.Settings-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 7px;
+  padding: 1rem;
+
+  transition: transform 0.3s ease;
+  width: unset !important;
 }
 h5 {
   color: #046689;
@@ -39,3 +53,6 @@ h5 {
 .buttons {
   height: unset !important;
 }
+/* .Settings-page {
+  height: 1rem !important;
+} */

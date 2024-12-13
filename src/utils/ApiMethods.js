@@ -114,22 +114,15 @@ const handleApiGetAction = async (
   errorMessage,
   retryGetActionCount,
   setLoading,
-  setApiResponse,
-  errorMessageWithoutStatus,
-  setStatusCode
+  setApiResponse
 ) => {
   try {
-    const response = await axios.get(url, { withCredentials: true });
+    const response = await axios.get(url);
+    //, { withCredentials: true });
 
-    if (setStatusCode != undefined) setStatusCode(response.status);
-
-    if (response.status === 200) {
-      if (setApiResponse !== "") {
-        setApiResponse(response.data);
-      }
-      setLoading(false);
-      retryGetActionCount = 0;
-    }
+    setLoading(false);
+    retryGetActionCount = 0;
+    setApiResponse(response.data);
     return response.data;
   } catch (error) {
     ErrorLogger(error);
@@ -162,9 +155,7 @@ const handleApiGetAction = async (
         setLoading(false);
       }
     } else if (error.response) {
-      if (error.response.status === 204) {
-        toast.error(errorMessage);
-      } else if (error.response.status === 500) {
+      if (error.response.status === 500) {
         toast.error(
           `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
         );
@@ -173,7 +164,7 @@ const handleApiGetAction = async (
         else toast.error("You are not authorized to make this request.");
       } else if (error.response) showToast(error.response.data);
       else {
-        toast.error(errorMessageWithoutStatus);
+        toast.error(errorMessage);
       }
 
       setLoading(false);
@@ -362,7 +353,7 @@ const handleApiPatchAction = async (
       await schema.validate(formData, { abortEarly: false });
     }
     const patchResponse = await axios.patch(apiUrl, patchData, {
-      withCredentials: true,
+      // withCredentials: true,
     });
     if (patchResponse.status === 200) {
       // Reset error state for all fields

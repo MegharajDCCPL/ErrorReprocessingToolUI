@@ -4,7 +4,7 @@ const showToast = (response) => {
   if (response) {
     const { text, type } = response; // Adjust to match API response structure
 
-    switch (type.toLowerCase()) {
+    switch (type !== undefined && type.toLowerCase()) {
       case "error":
         toast.error(text);
         break;
