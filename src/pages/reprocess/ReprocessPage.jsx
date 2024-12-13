@@ -10,7 +10,7 @@ const ReprocessPage = () => {
   // }, []);
 
   return (
-    <div>
+    <div className="bg-light d-flex flex-column h-100">
       <Reprocess />
     </div>
   );

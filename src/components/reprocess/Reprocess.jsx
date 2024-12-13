@@ -11,12 +11,13 @@ import data from "../../data/Data";
 
 const Reprocess = () => {
   const [formData, setFormData] = useState({
+    MessageId: "",
     ErrorCode: "",
     Error: "",
+    CriticalElement: "",
     CriticalElementName: "",
     AdapterType: "",
     MessageType: "",
-    MessageId: "",
     AdapterName: "",
     OriginalMessageContent: "",
   });
@@ -37,6 +38,42 @@ const Reprocess = () => {
   const [toDate, setToDate] = useState(null);
   const typeaheadRef = useRef([]);
 
+  const [selectedMessages, setSelectedMessages] = useState([]);
+  const [interfaceTypeOptions, setInterfaceTypeOptions] = useState([
+    { label: "Inbound" },
+    { label: "Outbound" },
+  ]);
+  const [messageTypeOptions, setMessageTypeOptions] = useState([]);
+  const [adapterTypeOptions, setAdapterTypeOptions] = useState([]);
+  const [criticalElementOptions, setCriticalElementOptions] = useState([]);
+
+  useEffect(() => {
+    fetchDropdownData("MessageType");
+    fetchDropdownData("AdapterType");
+    fetchDropdownData("CriticalElementName");
+  }, []);
+
+  const fetchDropdownData = async (type) => {
+    try {
+      const apiUrl = `${ERT_API_URLS.Reprocess_URL}${type}`;
+      const response = await ApiMethods.handleApiGetAction(
+        apiUrl,
+        "Error fetching data for dropdown",
+        retryCount,
+        setLoading
+      );
+      if (type === "MessageType") {
+        setMessageTypeOptions(response || []);
+      } else if (type === "AdapterType") {
+        setAdapterTypeOptions(response || []);
+      } else if (type === "CriticalElementName") {
+        setCriticalElementOptions(response || []);
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+
   useEffect(() => {
     try {
       if (allDataCount !== "") {
@@ -53,36 +90,18 @@ const Reprocess = () => {
         const [start, end] = dataRangeDrop.split("-");
         let generateUrl = `${ERT_API_URLS.Reprocess_URL}startValue=${start}&endValue=${end}`;
         if (isFilteredBtnClicked) {
-          let FilterURL = `${ERT_API_URLS.AuditTrail_URL}`;
-          if (formData.Error !== "") {
-            FilterURL += `&Error=${formData.Error}`;
-          }
-          if (formData.CriticalElementName) {
-            FilterURL += `&MESObjectValue=${formData.CriticalElementName}`;
-          }
-          if (formData.ErrorCode) {
-            FilterURL += `&ErrorCode=${formData.ErrorCode}`;
-          }
-          if (formData.AdapterType) {
-            FilterURL += `&AdapterType=${formData.AdapterType}`;
-          }
-          if (formData.MessageType) {
-            FilterURL += `&MessageType=${formData.MessageType}`;
-          }
-          if (formData.MessageId) {
-            FilterURL += `&MessageId=${formData.MessageId}`;
-          }
-          if (formData.AdapterName) {
-            FilterURL += `&Request=${formData.AdapterName}`;
-          }
-          if (formData.OriginalMessageContent) {
-            FilterURL += `&OriginalMessageContent=${formData.OriginalMessageContent}`;
-          }
-          if (fromDate !== undefined && fromDate !== null) {
+          let FilterURL = `${ERT_API_URLS.Reprocess_URL}`;
+          Object.keys(formData).forEach((key) => {
+            if (formData[key]) {
+              FilterURL += `&${key}=${formData[key]}`;
+            }
+          });
+
+          if (fromDate !== null) {
             FilterURL += `&fromDate=${formatDate(fromDate)}`;
           }
-
-          if (toDate !== undefined && toDate !== null) {
+          if (toDate !== null) {
+            // eslint-disable-next-line no-unused-vars
             FilterURL += `&toDate=${formatDate(toDate)}`;
           }
         }
@@ -135,31 +154,6 @@ const Reprocess = () => {
     }));
   };
 
-  const handleReset = () => {
-    setFilteredData([]);
-    setRanges([]); //clearing range value
-    setAllDataCount("0");
-    setFormData({
-      ErrorCode: "",
-      Error: "",
-      CriticalElementName: "",
-      AdapterType: "",
-      MessageType: "",
-      MessageId: "",
-      AdapterName: "",
-      OriginalMessageContent: "",
-    });
-    typeaheadRef.current.forEach((ref) => {
-      if (ref) {
-        ref.clear();
-      }
-    });
-    setFromDate(null);
-    setToDate(null);
-  };
-
-  const [selectedMessages, setSelectedMessages] = useState([]);
-
   const handleCheckboxChange = (messageId) => {
     setSelectedMessages((prevSelected) => {
       if (prevSelected.includes(messageId)) {
@@ -178,6 +172,45 @@ const Reprocess = () => {
     } else {
       setSelectedMessages([]);
     }
+  };
+
+  const handleDropdownChange = async (selected, fieldName) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      [fieldName]: selected.length > 0 ? selected[0].label : "",
+    }));
+  };
+
+  const handleReprocess = async () => {
+    console.log(selectedMessages);
+  };
+
+  const handleCloseError = async () => {
+    console.log(selectedMessages);
+  };
+
+  const handleReset = () => {
+    setFilteredData([]);
+    setRanges([]);
+    setAllDataCount("0");
+    setFormData({
+      MessageId: "",
+      ErrorCode: "",
+      Error: "",
+      CriticalElement: "",
+      CriticalElementName: "",
+      AdapterType: "",
+      MessageType: "",
+      AdapterName: "",
+      OriginalMessageContent: "",
+    });
+    typeaheadRef.current.forEach((ref) => {
+      if (ref) {
+        ref.clear();
+      }
+    });
+    setFromDate(null);
+    setToDate(null);
   };
 
   // Check if all individual checkboxes are selected
@@ -215,67 +248,35 @@ const Reprocess = () => {
     { Header: "Error Code", accessor: "errorCode" },
     { Header: "Adapter Type", accessor: "adapterType" },
     { Header: "Response", accessor: "response" },
+    { Header: "Original Message Content", accessor: "originalMessageContent" },
+    { Header: "Request", accessor: "request" },
   ];
-
-  const handleSubmit = async () => {
-    // Handle form submission
-    console.log(selectedMessages);
-  };
 
   const handleFilter = async () => {
     try {
-      // setRanges([]); //clearing range value
-      setIsFilteredBtnClicked(true);
-      // setFilteredData([]);
-      // const [start, end] = dataRangeDrop.split("-");
-
       let FilterURL = `${ERT_API_URLS.Reprocess_URL}`;
-      if (formData.Error !== "") {
-        FilterURL += `&Error=${formData.Error}`;
-      }
-      if (formData.CriticalElementName) {
-        FilterURL += `&MESObjectValue=${formData.CriticalElementName}`;
-      }
-      if (formData.ErrorCode) {
-        FilterURL += `&ErrorCode=${formData.ErrorCode}`;
-      }
-      if (formData.AdapterType) {
-        FilterURL += `&AdapterType=${formData.AdapterType}`;
-      }
-      if (formData.MessageType) {
-        FilterURL += `&MessageType=${formData.MessageType}`;
-      }
-      if (formData.MessageId) {
-        FilterURL += `&MessageId=${formData.MessageId}`;
-      }
-      if (formData.AdapterName) {
-        FilterURL += `&Request=${formData.AdapterName}`;
-      }
-      if (formData.OriginalMessageContent) {
-        FilterURL += `&OriginalMessageContent=${formData.OriginalMessageContent}`;
-      }
-      if (fromDate !== undefined && fromDate !== null) {
+
+      // Append form data to URL
+      Object.keys(formData).forEach((key) => {
+        if (formData[key]) {
+          FilterURL += `&${key}=${formData[key]}`;
+        }
+      });
+
+      if (fromDate !== null) {
         FilterURL += `&fromDate=${formatDate(fromDate)}`;
       }
-
-      if (toDate !== undefined && toDate !== null) {
+      if (toDate !== null) {
         FilterURL += `&toDate=${formatDate(toDate)}`;
       }
 
-      // if (selectedUserDrop && Object.keys(selectedUserDrop).length > 0) {
-      //   auditTrailUrl += `&EmployeeName=${selectedUserDrop.userName}`;
-      // }
-
-      //calling Get method
-      const apiResponse = await ApiMethods.handleApiGetAction(
+      await ApiMethods.handleApiGetAction(
         FilterURL,
         "Records doesn't exist.",
         retryCount,
         setLoading,
-        setFilteredDataApiRes,
-        "Error in fetching filtered data."
+        setFilteredDataApiRes
       );
-
       // if (apiResponse !== null) {
       //   setAllDataCount(apiResponse["totalRecords"]);
       // } else {
@@ -332,13 +333,6 @@ const Reprocess = () => {
     return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}.${SSS}`;
   };
 
-  const handleDropdownChange = async (selected) => {
-    console.log("selected", selected[0].label);
-    setFormData((prevData) => ({
-      ...prevData,
-    }));
-  };
-
   const handleFilterRangeDrop = (event) => {
     try {
       if (event[0] !== undefined && event.length > 0) {
@@ -370,14 +364,11 @@ const Reprocess = () => {
 
   return (
     <div className="">
-      <div className="d-flex flex-wrap mt-4 mb-4 align-items-center gap-3">
+      <div className="d-flex flex-wrap  mb-4 align-items-center gap-3">
         <div>
           <label className="module-header" style={{ fontSize: "18px" }}>
-            Total Un-Processed Error (Error Count :
-            {/* {allDataCount
-            ? allDataCount
-            : ""} */}
-            )
+            Total Un-Processed Error (Error Count :{" "}
+            {/* {allDataCount ? allDataCount : ""} */})
           </label>
         </div>
         <div className="d-flex flex-row">
@@ -405,207 +396,237 @@ const Reprocess = () => {
           {showFilters ? "Hide Filters" : "Show Filters"}
         </Button>
       </div>
-      {showFilters && (
-        <Form className="rounded  border">
-          <div className="ms-2 mt-3 d-flex flex-wrap align-items-center gap-3 p-2 ">
-            <Form.Group controlId="MessageId">
-              <Form.Label>Message ID</Form.Label>
-              <Form.Control
-                type="text"
-                name="MessageId"
-                value={formData.MessageId}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
 
-            <Form.Group controlId="ErrorCode">
-              <Form.Label>Error Code</Form.Label>
-              <Form.Control
-                type="text"
-                name="ErrorCode"
-                value={formData.ErrorCode}
-                className="form-control"
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+      <div className="d-flex gap-3">
+        {showFilters && (
+          <div
+            className="d-flex flex-column rounded border overflow-auto"
+            style={{
+              height: "76vh",
+              width: "100vh",
+            }}
+          >
+            <div className="flex-grow-1 overflow-auto">
+              <Form>
+                <div className="ms-2 mt-3 d-flex flex-wrap align-items-center gap-3 p-2">
+                  <Form.Group controlId="MessageId">
+                    <Form.Label>Message ID</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="MessageId"
+                      value={formData.MessageId}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="Error">
-              <Form.Label>Error</Form.Label>
-              <Form.Control
-                type="text"
-                name="Error"
-                value={formData.Error}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="ErrorCode">
+                    <Form.Label>Error Code</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="ErrorCode"
+                      value={formData.ErrorCode}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="CriticalElement">
-              <Form.Label>Critical Element</Form.Label>
-              <Typeahead
-                id="CriticalElement"
-                labelKey="label"
-                ref={(ref) => (typeaheadRef.current[0] = ref)}
-                options={[
-                  { label: "CriticalElement 1" },
-                  { label: "CriticalElement 2" },
-                  { label: "CriticalElement 3" },
-                  { label: "CriticalElement 4" },
-                  { label: "CriticalElement 5" },
-                ]}
-                filterBy={() => true}
-                inputProps={{ readOnly: true }}
-                placeholder="Choose an CriticalElement..."
-                onChange={(selected) => handleDropdownChange(selected)}
-              />
-            </Form.Group>
+                  <Form.Group controlId="Error">
+                    <Form.Label>Error</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="Error"
+                      value={formData.Error}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="CriticalElementName">
-              <Form.Label>Critical Element Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="CriticalElementName"
-                value={formData.CriticalElementName}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="CriticalElement">
+                    <Form.Label>Critical Element</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="CriticalElement"
+                      value={formData.CriticalElement}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="AdapterType">
-              <Form.Label>Adapter Type</Form.Label>
-              <Form.Control
-                type="text"
-                name="AdapterType"
-                value={formData.AdapterType}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="CriticalElementName">
+                    <Form.Label>Critical Element Name</Form.Label>
+                    <Typeahead
+                      id="CriticalElementName"
+                      labelKey="label"
+                      options={criticalElementOptions}
+                      filterBy={() => true}
+                      inputProps={{ readOnly: true }}
+                      selected={
+                        formData.CriticalElementName
+                          ? [{ label: formData.CriticalElementName }]
+                          : []
+                      }
+                      onChange={(selected) =>
+                        handleDropdownChange(selected, "CriticalElementName")
+                      }
+                      placeholder="Choose a Critical Element Name..."
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="AdapterName">
-              <Form.Label>Adapter Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="AdapterName"
-                value={formData.AdapterName}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="AdapterType">
+                    <Form.Label>Adapter Type</Form.Label>
+                    <Typeahead
+                      id="AdapterType"
+                      labelKey="label"
+                      options={adapterTypeOptions}
+                      filterBy={() => true}
+                      inputProps={{ readOnly: true }}
+                      selected={
+                        formData.AdapterType
+                          ? [{ label: formData.AdapterType }]
+                          : []
+                      }
+                      onChange={(selected) =>
+                        handleDropdownChange(selected, "AdapterType")
+                      }
+                      placeholder="Choose an Adapter Type..."
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="MessageType">
-              <Form.Label>Message Type</Form.Label>
-              <Form.Control
-                type="text"
-                name="MessageType"
-                value={formData.MessageType}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="AdapterName">
+                    <Form.Label>Adapter Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="AdapterName"
+                      value={formData.AdapterName}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="InterfaceType">
-              <Form.Label>Interface Type</Form.Label>
-              <Typeahead
-                id="InterfaceType"
-                labelKey="label"
-                ref={(ref) => (typeaheadRef.current[1] = ref)}
-                options={[
-                  { label: "Interface Type 1" },
-                  { label: "Interface Type 2" },
-                  { label: "Interface Type 3" },
-                  { label: "Interface Type 4" },
-                  { label: "Interface Type 5" },
-                ]}
-                filterBy={() => true}
-                inputProps={{ readOnly: true }}
-                placeholder="Choose an Interface Type..."
-                onChange={(selected) => console.log("Dropdown", selected)}
-              />
-            </Form.Group>
+                  <Form.Group controlId="MessageType">
+                    <Form.Label>Message Type</Form.Label>
+                    <Typeahead
+                      id="MessageType"
+                      labelKey="label"
+                      options={messageTypeOptions}
+                      filterBy={() => true}
+                      inputProps={{ readOnly: true }}
+                      selected={
+                        formData.MessageType
+                          ? [{ label: formData.MessageType }]
+                          : []
+                      }
+                      onChange={(selected) =>
+                        handleDropdownChange(selected, "MessageType")
+                      }
+                      placeholder="Choose a Message Type..."
+                    />
+                  </Form.Group>
 
-            <Form.Group controlId="OriginalMessageContent">
-              <Form.Label>Original Message Content</Form.Label>
-              <Form.Control
-                type="text"
-                name="OriginalMessageContent"
-                value={formData.OriginalMessageContent}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+                  <Form.Group controlId="InterfaceType">
+                    <Form.Label>Interface Type</Form.Label>
+                    <Typeahead
+                      id="InterfaceType"
+                      labelKey="label"
+                      options={interfaceTypeOptions}
+                      filterBy={() => true}
+                      inputProps={{ readOnly: true }}
+                      selected={
+                        formData.InterfaceType
+                          ? [{ label: formData.InterfaceType }]
+                          : []
+                      }
+                      onChange={(selected) =>
+                        handleDropdownChange(selected, "InterfaceType")
+                      }
+                      placeholder="Choose an Interface Type..."
+                    />
+                  </Form.Group>
 
-            <div>
-              <label className="me-2 mb-2" style={{ display: "grid" }}>
-                From Date
-              </label>
-              <DatePicker
-                id="fromDate"
-                ref={(ref) => (typeaheadRef.current[3] = ref)}
-                selected={fromDate}
-                onChange={(date) => setFromDate(date)}
-                className="form-control"
-                dateFormat="MM/dd/yyyy"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                placeholderText="Choose a date"
-                maxDate={toDate || new Date()} // Disable dates after toDate or future dates
-              />
+                  <Form.Group controlId="OriginalMessageContent">
+                    <Form.Label>Original Message Content</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="OriginalMessageContent"
+                      value={formData.OriginalMessageContent}
+                      onChange={handleInputChange}
+                    />
+                  </Form.Group>
+
+                  <div>
+                    <label className="me-2 mb-2" style={{ display: "grid" }}>
+                      From Date
+                    </label>
+                    <DatePicker
+                      id="fromDate"
+                      selected={fromDate}
+                      onChange={(date) => setFromDate(date)}
+                      className="form-control"
+                      dateFormat="MM/dd/yyyy"
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      placeholderText="Choose a date"
+                      maxDate={toDate || new Date()}
+                    />
+                  </div>
+                  <div>
+                    <label className="me-2 mb-2" style={{ display: "grid" }}>
+                      To Date
+                    </label>
+                    <DatePicker
+                      id="toDate"
+                      selected={toDate}
+                      onChange={(date) => setToDate(date)}
+                      className="form-control"
+                      dateFormat="MM/dd/yyyy"
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      placeholderText="Choose a date"
+                      minDate={fromDate}
+                      maxDate={new Date()}
+                    />
+                  </div>
+                </div>
+              </Form>
             </div>
-            <div>
-              <label className="me-2 mb-2" style={{ display: "grid" }}>
-                To Date
-              </label>
-              <DatePicker
-                id="toDate"
-                ref={(ref) => (typeaheadRef.current[4] = ref)}
-                selected={toDate}
-                onChange={(date) => setToDate(date)}
-                className="form-control"
-                dateFormat="MM/dd/yyyy"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                placeholderText="Choose a date"
-                minDate={fromDate} // Disable dates before fromDate
-                maxDate={new Date()} // Disable future dates
-              />
+            <div className="d-flex justify-content-end gap-3 me-3 mb-2 position-sticky bottom-0 p-2">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                id="reset-btn"
+                className="ms-2 mt-4"
+                style={{ width: "7rem" }}
+                onClick={handleReset}
+              >
+                Reset
+              </Button>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                className="mt-4"
+                style={{ width: "7rem" }}
+                onClick={async () => await handleFilter()}
+              >
+                Filter
+              </Button>
             </div>
           </div>
-          <div className="d-flex justify-content-end gap-3 me-3 mb-2">
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              id="reset-btn"
-              className="ms-2 mt-4"
-              style={{ width: "7rem" }}
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              className="mt-4"
-              style={{ width: "7rem" }}
-              onClick={async () => await handleFilter()}
-            >
-              Filter
-            </Button>
-          </div>
-        </Form>
-      )}
+        )}
 
-      {/* Table Component */}
-      <TableUtility
-        gridColumns={gridColumns}
-        gridData={data}
-        pageSizes={[5, 10, 20]}
-        customMethod={handleCheckboxChange}
-      />
+        {/* Table Utility */}
+        <div style={{ height: "76vh", overflowX: "auto" }}>
+          <TableUtility
+            gridColumns={gridColumns}
+            gridData={data}
+            pageSizes={[5, 10, 20]}
+          />
+        </div>
+      </div>
 
-      {/* Action Buttons */}
       <div className="d-flex justify-content-end gap-3 pt-2 ms-3 me-3 border-top border-subtle">
         <Button
           id="close-errors-btn"
           variant="outline-danger"
           size="sm"
-          onClick={""}
+          onClick={async () => await handleCloseError()}
         >
           Close Error
         </Button>
@@ -614,7 +635,7 @@ const Reprocess = () => {
           variant="outline-primary"
           size="sm"
           type="submit"
-          onClick={async () => await handleSubmit()}
+          onClick={async () => await handleReprocess()}
         >
           Reprocess
         </Button>
