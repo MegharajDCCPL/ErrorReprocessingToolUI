@@ -1,0 +1,35 @@
+.tab-body {
+  margin-top: 1rem;
+  width: 100%;
+  overflow: auto;
+}
+
+.tab-body table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.tab-body table th {
+  text-align: start;
+  border: 1px var(--clr-medium-grey) solid;
+  padding: 0.5rem;
+  font-weight: var(--fw-semi-bold);
+  color: var(--clr-dark-grey);
+  background-color: var(--clr-grey);
+}
+
+.tab-body table tr:nth-child(even) {
+  background-color: var(--clr-light-grey);
+}
+
+.tab-body table td {
+  text-align: start;
+  border: 1px var(--clr-medium-grey) solid;
+  padding: 0.5rem;
+  color: var(--clr-dark-grey);
+}
+
+.go-to-page {
+  width: 4rem !important;
+}
