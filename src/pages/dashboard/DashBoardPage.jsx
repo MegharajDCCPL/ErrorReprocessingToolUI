@@ -2,7 +2,7 @@ import Dashboard from "../../components/dashboard/Dashboard";
 
 const DashboardPage = () => {
   return (
-    <div>
+    <div className="bg-light ms-2 mt-2 d-flex flex-column h-100">
       <Dashboard />
     </div>
   );

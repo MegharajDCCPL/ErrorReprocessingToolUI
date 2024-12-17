@@ -361,7 +361,7 @@ const Close = () => {
 
   return (
     <div className="">
-      <div className="d-flex flex-wrap mt-4 mb-4 align-items-center gap-3">
+      <div className="d-flex flex-wrap mt-2 mb-4 align-items-center gap-3">
         <div>
           <label className="module-header" style={{ fontSize: "18px" }}>
             Total Un-Processed Error (Error Count :{" "}

@@ -364,7 +364,7 @@ const Reprocess = () => {
 
   return (
     <div className="">
-      <div className="d-flex flex-wrap  mb-4 align-items-center gap-3">
+      <div className="d-flex flex-wrap mt-2 mb-4 align-items-center gap-3">
         <div>
           <label className="module-header" style={{ fontSize: "18px" }}>
             Total Un-Processed Error (Error Count :{" "}
@@ -587,7 +587,7 @@ const Reprocess = () => {
                 </div>
               </Form>
             </div>
-            <div className="d-flex justify-content-end gap-3 me-3 mb-2 position-sticky bottom-0 p-2">
+            <div className="d-flex justify-content-end gap-3 me-3 mb-2  position-sticky bottom-0 p-2">
               <Button
                 variant="outline-secondary"
                 size="sm"
