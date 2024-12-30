@@ -1,21 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import TableUtility from "../common/modified-datatable/TableUtility";
-import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
-import { FaFilter } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
+import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
 
-const Reprocess = () => {
+const Purge = () => {
   const { setSelectedComponentName } = useUser();
   useEffect(() => {
-    setSelectedComponentName("reprocess");
+    setSelectedComponentName("purge");
   }, []);
   const [formData, setFormData] = useState({
     MessageId: "",
@@ -48,6 +49,9 @@ const Reprocess = () => {
     { label: "Outbound" },
   ]);
 
+  const [isPurgeAuto, setIsPurgeAuto] = useState(false);
+  const [purgeText, setPurgeText] = useState("");
+
   // Generate ranges based on all data count
   useEffect(() => {
     if (allDataCount !== "") {
@@ -59,7 +63,7 @@ const Reprocess = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Open_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
+      let generateUrl = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
 
       if (isFilteredBtnClicked) {
         generateUrl = constructFilterURL(generateUrl);
@@ -71,14 +75,14 @@ const Reprocess = () => {
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      setFilteredData(initialFilteredData["openErrors"]);
+      setFilteredData(initialFilteredData["archivedErrors"]);
     }
   }, [initialFilteredData]);
 
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        setFilteredData(filteredDataApiRes["openErrors"]);
+        setFilteredData(filteredDataApiRes["archivedErrors"]);
       }
     } catch (error) {
       ErrorLogger(error);
@@ -112,7 +116,6 @@ const Reprocess = () => {
       }
     });
   };
-
   const handleSelectAllChange = (e) => {
     if (e.target.checked) {
       setSelectedErrors(filteredData.map((row) => row.errorId));
@@ -128,40 +131,8 @@ const Reprocess = () => {
     }));
   };
 
-  // Handle reprocessing selected errors
-  const handleReprocess = async () => {
-    if (selectedErrors.length === 0) {
-      toast.info("No messages selected for reprocessing.");
-      return;
-    }
-
-    const payload = {
-      serverName: ERT_API_URLS.server_name,
-      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
-    };
-
-    try {
-      await ApiMethods.handleApiPostAction(
-        "",
-        "",
-        ERT_API_URLS.Reprocess_Open_Errors_URL,
-        "",
-        "Error in Reprocessing Error",
-        "",
-        setLoading,
-        handleRefreshPage,
-        0,
-        payload,
-        uuid,
-        setUuid
-      );
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
-
   // Handle closing selected errors
-  const handleCloseError = async () => {
+  const handlePurge = async () => {
     if (selectedErrors.length === 0) {
       toast.info("No errors selected for closing.");
       return;
@@ -176,9 +147,9 @@ const Reprocess = () => {
       await ApiMethods.handleApiPostAction(
         "",
         "",
-        ERT_API_URLS.Close_Open_Errors_URL,
+        ERT_API_URLS.Purge_Errors_URL,
         "",
-        "Error in Closing Error",
+        "Error in Purging Error",
         "",
         setLoading,
         handleRefreshPage,
@@ -196,7 +167,7 @@ const Reprocess = () => {
   const handleRefreshPage = async () => {
     await handleFilteredData(
       constructFilterURL(
-        `${ERT_API_URLS.Open_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
+        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
       )
     );
     setSelectedErrors([]);
@@ -231,7 +202,7 @@ const Reprocess = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Open_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+    const initialURL = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
@@ -312,7 +283,7 @@ const Reprocess = () => {
         toast.info("No data to filter");
         return;
       }
-      let FilterURL = `${ERT_API_URLS.Open_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+      let FilterURL = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=192.168.1.33&`;
 
       // Append form data to URL
       Object.keys(formData).forEach((key) => {
@@ -322,10 +293,10 @@ const Reprocess = () => {
       });
 
       if (startDate !== null) {
-        FilterURL += `&StartDate=${formatDate(startDate)}`;
+        FilterURL += `&startDate=${formatDate(startDate)}`;
       }
       if (endDate !== null) {
-        FilterURL += `&EndDate=${formatDate(endDate)}`;
+        FilterURL += `&endDate=${formatDate(endDate)}`;
       }
 
       let apiResponse = await ApiMethods.handleApiGetAction(
@@ -337,7 +308,7 @@ const Reprocess = () => {
       );
       if (apiResponse !== null) {
         setAllDataCount(apiResponse["totalRecords"]);
-        setFilteredData(apiResponse["openErrors"]);
+        setFilteredData(apiResponse["archivedErrors"]);
       } else {
         setAllDataCount("0");
         setFilteredData([]);
@@ -367,7 +338,7 @@ const Reprocess = () => {
   const handleFilteredDataCount = async (startRow, endRow) => {
     try {
       const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Open_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
+        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
         "Records doesn't exist.",
         0,
         setLoading,
@@ -425,19 +396,18 @@ const Reprocess = () => {
   };
 
   return (
-    <div className="">
+    <div>
       <ToastContainer />
-      <div className="d-flex flex-row flex-wrap align-items-center mt-2 mb-4 gap-3">
-        <div>
-          <label className="module-header" style={{ fontSize: "18px" }}>
-            Un-Processed Error Count : {allDataCount ? allDataCount : ""}
-          </label>
-        </div>
+      <div className="d-flex flex-wrap flex-row align-items-center mt-2 mb-4 gap-3">
+        <label className="module-header" style={{ fontSize: "18px" }}>
+          Archived Error Count : {allDataCount ? allDataCount : ""}
+        </label>
+
+        {/* Filtered Data Range */}
         <div className="d-flex align-items-center">
           <label className="me-2" style={{ marginTop: "0.375rem" }}>
             Filtered Data Range
           </label>
-
           <Typeahead
             id="instance-range-typeahead"
             className="me-2"
@@ -448,10 +418,11 @@ const Reprocess = () => {
             placeholder="Set range..."
             onChange={handleFilterRangeDrop}
             filterBy={() => true} // Disable filtering
-            inputProps={{ readOnly: true }} // Make input field read-only
+            inputProps={{ readOnly: true }}
           />
         </div>
 
+        {/* Filter Button */}
         <OverlayTrigger
           placement="right"
           overlay={<Tooltip id="filter-tooltip">Apply Filter</Tooltip>}
@@ -464,6 +435,33 @@ const Reprocess = () => {
             <FaFilter />
           </Button>
         </OverlayTrigger>
+
+        {/* Enable Auto Purge Switch */}
+        <Form.Group controlId="purgeAutoSwitch">
+          <Form.Check
+            type="switch"
+            id="purgeAutoSwitch"
+            label="Auto Purge"
+            checked={isPurgeAuto}
+            onChange={() => setIsPurgeAuto(!isPurgeAuto)}
+          />
+        </Form.Group>
+
+        {/* Purge Details Section */}
+        {isPurgeAuto && (
+          <div className="d-flex align-items-center  gap-2">
+            <Form.Control
+              type="text"
+              placeholder="Enter Retention Days"
+              value={purgeText}
+              style={{ width: "8.7rem" }}
+              onChange={(e) => setPurgeText(e.target.value)}
+            />
+            <Button variant="outline-danger" size="sm" onClick={() => {}}>
+              Purge
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="d-flex gap-3">
@@ -472,7 +470,7 @@ const Reprocess = () => {
             className="d-flex flex-column rounded border overflow-auto"
             style={{
               height: "76vh",
-              width: "45rem",
+              width: "40rem",
             }}
           >
             <div className="flex-grow-1 overflow-auto">
@@ -551,8 +549,8 @@ const Reprocess = () => {
                   <Form.Group controlId="MessageType">
                     <Form.Label>Message Type</Form.Label>
                     <Form.Control
-                      type="text"
                       name="MessageType"
+                      type="text"
                       value={formData.MessageType}
                       onChange={handleInputChange}
                     />
@@ -593,7 +591,7 @@ const Reprocess = () => {
                       From Date
                     </label>
                     <DatePicker
-                      id="StartDate"
+                      id="fromDate"
                       selected={startDate}
                       onChange={(date) => setStartDate(date)}
                       className="form-control"
@@ -610,7 +608,7 @@ const Reprocess = () => {
                       To Date
                     </label>
                     <DatePicker
-                      id="EndDate"
+                      id="toDate"
                       selected={endDate}
                       onChange={(date) => setEndDate(date)}
                       className="form-control"
@@ -626,7 +624,7 @@ const Reprocess = () => {
                 </div>
               </Form>
             </div>
-            <div className="d-flex justify-content-end gap-3 me-3 mb-2  position-sticky bottom-0 p-2">
+            <div className="d-flex justify-content-end gap-3 me-3 mb-2 position-sticky bottom-0 p-2">
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -660,27 +658,19 @@ const Reprocess = () => {
         </div>
       </div>
 
-      <div className="d-flex justify-content-end gap-3 mt-2 pt-2 ms-3 me-3 border-top border-subtle">
+      <div className="d-flex justify-content-end mt-3 gap-3 pt-2 ms-3 me-3  border-top border-subtle">
         <Button
           id="close-errors-btn"
           variant="outline-danger"
           size="sm"
-          onClick={async () => await handleCloseError()}
+          onClick={handlePurge}
+          disabled={isPurgeAuto}
         >
-          Close Error
-        </Button>
-        <Button
-          id="reprocess-errors-btn"
-          variant="outline-primary"
-          size="sm"
-          type="submit"
-          onClick={async () => await handleReprocess()}
-        >
-          Reprocess
+          Purge
         </Button>
       </div>
     </div>
   );
 };
 
-export default Reprocess;
+export default Purge;

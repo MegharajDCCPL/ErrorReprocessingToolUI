@@ -207,12 +207,14 @@ const TableUtility = (props) => {
                         typeof cellValue === "string" &&
                         cellValue.startsWith("<") &&
                         cellValue.endsWith(">");
+                      const rowError = cell.column.Header === "Error";
+
                       return (
                         <td
                           key={key}
                           {...restCellProps}
                           style={
-                            isXML
+                            isXML || rowError
                               ? {
                                   maxWidth: "200px",
                                   whiteSpace: "nowrap",

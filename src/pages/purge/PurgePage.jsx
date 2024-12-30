@@ -1,12 +1,12 @@
-import Close from "../../components/closederrors/Close";
+import Purge from "../../components/purge/Purge";
 import styles from "../CommonPages.module.css";
 
-const CloseErrorsPage = () => {
+const Purgepage = () => {
   return (
     <div className="bg-light ms-2 d-flex flex-column h-100">
-      <Close />
+      <Purge />
     </div>
   );
 };
 
-export default CloseErrorsPage;
+export default Purgepage;

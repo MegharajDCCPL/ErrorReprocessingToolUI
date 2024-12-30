@@ -1,11 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import styles from "./SideNavbar.module.css";
-// import { useUser } from "../common/UserProvider";
+import { useUser } from "../common/UserProvider";
 
 const SideNavbar = () => {
   const navigate = useNavigate();
+  const { selectedComponentName, setSelectedComponentName } = useUser();
 
   const handleNavLinkClick = (page) => {
+    setSelectedComponentName(page);
     navigate(`/homepage/${page}`);
   };
 
@@ -13,35 +15,62 @@ const SideNavbar = () => {
     <div className={`${styles["side-navbar"]} ps-2 `}>
       <ul>
         <li
-          className={`${styles["active-link"]}`}
+          className={`${
+            selectedComponentName === "dashboard"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
           onClick={() => handleNavLinkClick("dashboard")}
         >
           <img className={`${styles["icon"]}`} src={""} />
           <NavLink to="dashboard">Dashboard</NavLink>
         </li>
         <li
-          className={`${styles["active-link"]}`}
+          className={`${
+            selectedComponentName === "reprocess"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
           onClick={() => handleNavLinkClick("reprocess")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/reprocess">Open Items</NavLink>
+          <NavLink to="/reprocess">ReProcess Errors</NavLink>
         </li>
         <li
-          className={`${styles["active-link"]}`}
+          className={`${
+            selectedComponentName === "close" ? `${styles["active-link"]}` : ""
+          } `}
           onClick={() => handleNavLinkClick("close")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/close">Closed Items</NavLink>
+          <NavLink to="/close">ReOpen Errors</NavLink>
         </li>
         <li
-          className={`${styles["active-link"]}`}
+          className={`${
+            selectedComponentName === "archive"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
           onClick={() => handleNavLinkClick("archive")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/archive">Archived Data</NavLink>
+          <NavLink to="/archive">Archive </NavLink>
         </li>
         <li
-          className={`${styles["active-link"]}`}
+          className={`${
+            selectedComponentName === "purge" ? `${styles["active-link"]}` : ""
+          } `}
+          onClick={() => handleNavLinkClick("purge")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/purge">Purge </NavLink>
+        </li>
+        <li
+          className={`${
+            selectedComponentName === "settings"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
           onClick={() => handleNavLinkClick("settings")}
         >
           <img className={`${styles["icon"]}`} src={""} />

@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom";
-import styles from "./MiddleContainer.module.css";
 
 const MiddleContainer = () => {
   return (
