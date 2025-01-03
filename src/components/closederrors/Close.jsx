@@ -1,21 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 import TableUtility from "../common/modified-datatable/TableUtility";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { toast, ToastContainer } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
-import data from "../../data/Data";
+import { v4 as uuidv4 } from "uuid";
+import { FaFilter } from "react-icons/fa";
+import { useUser } from "../common/UserProvider";
 
 const Close = () => {
+  const { setSelectedComponentName } = useUser();
+  useEffect(() => {
+    setSelectedComponentName("close");
+  }, []);
   const [formData, setFormData] = useState({
     MessageId: "",
     ErrorCode: "",
     Error: "",
-    CriticalElement: "",
-    CriticalElementName: "",
+    MesObject: "",
+    MesObjectValue: "",
     AdapterType: "",
     MessageType: "",
     AdapterName: "",
@@ -23,126 +30,66 @@ const Close = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [isFilteredBtnClicked, setIsFilteredBtnClicked] = useState(false);
-  const [initialfilteredDataApiRes, setInitialFilteredDataApiRes] = useState(
-    {}
-  );
-  const [filteredDataApiRes, setFilteredDataApiRes] = useState({});
+  const [initialFilteredData, setInitialFilteredData] = useState([]);
+  const [uuid, setUuid] = useState(uuidv4());
   const [filteredData, setFilteredData] = useState([]);
   const [dataRangeDrop, setDataRangeDrop] = useState("1-10000");
   const [allDataCount, setAllDataCount] = useState("");
-  const [allDataCountApiRes, setAllDataCountApiRes] = useState([]);
-  const [ranges, setRanges] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [ranges, setRanges] = useState([]);
+  const [selectedErrors, setSelectedErrors] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [filteredDataApiRes, setFilteredDataApiRes] = useState({});
   let retryCount = 0;
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
   const typeaheadRef = useRef([]);
-
-  const [selectedMessages, setSelectedMessages] = useState([]);
   const [interfaceTypeOptions, setInterfaceTypeOptions] = useState([
     { label: "Inbound" },
     { label: "Outbound" },
   ]);
-  const [messageTypeOptions, setMessageTypeOptions] = useState([]);
-  const [adapterTypeOptions, setAdapterTypeOptions] = useState([]);
-  const [criticalElementOptions, setCriticalElementOptions] = useState([]);
 
+  // Generate ranges based on all data count
   useEffect(() => {
-    fetchDropdownData("MessageType");
-    fetchDropdownData("AdapterType");
-    fetchDropdownData("CriticalElementName");
-  }, []);
-
-  const fetchDropdownData = async (type) => {
-    try {
-      const apiUrl = `${ERT_API_URLS.Reprocess_URL}${type}`;
-      const response = await ApiMethods.handleApiGetAction(
-        apiUrl,
-        "Error fetching data for dropdown",
-        retryCount,
-        setLoading
-      );
-      if (type === "MessageType") {
-        setMessageTypeOptions(response || []);
-      } else if (type === "AdapterType") {
-        setAdapterTypeOptions(response || []);
-      } else if (type === "CriticalElementName") {
-        setCriticalElementOptions(response || []);
-      }
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
-
-  useEffect(() => {
-    try {
-      if (allDataCount !== "") {
-        generateRanges(allDataCount);
-      }
-    } catch (error) {
-      ErrorLogger(error);
+    if (allDataCount !== "") {
+      generateRanges(allDataCount);
     }
   }, [allDataCount]);
 
+  // Handle data range change
   useEffect(() => {
-    try {
-      if (dataRangeDrop !== "") {
-        const [start, end] = dataRangeDrop.split("-");
-        let generateUrl = `${ERT_API_URLS.Reprocess_URL}startValue=${start}&endValue=${end}`;
-        if (isFilteredBtnClicked) {
-          let FilterURL = `${ERT_API_URLS.Reprocess_URL}`;
-          Object.keys(formData).forEach((key) => {
-            if (formData[key]) {
-              FilterURL += `&${key}=${formData[key]}`;
-            }
-          });
+    if (dataRangeDrop !== "") {
+      const [start, end] = dataRangeDrop.split("-");
+      let generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
 
-          if (fromDate !== null) {
-            FilterURL += `&fromDate=${formatDate(fromDate)}`;
-          }
-          if (toDate !== null) {
-            // eslint-disable-next-line no-unused-vars
-            FilterURL += `&toDate=${formatDate(toDate)}`;
-          }
-        }
-        handleFilteredData(generateUrl);
+      if (isFilteredBtnClicked) {
+        generateUrl = constructFilterURL(generateUrl);
       }
-    } catch (error) {
-      ErrorLogger(error);
+      handleFilteredData(generateUrl);
     }
   }, [dataRangeDrop]);
 
+  // Handle filtered data response
   useEffect(() => {
-    try {
-      if (
-        initialfilteredDataApiRes &&
-        Object.keys(initialfilteredDataApiRes).length > 0
-      ) {
-        setFilteredData(initialfilteredDataApiRes["auditTrails"]);
-      }
-    } catch (error) {
-      ErrorLogger(error);
+    if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
+      setFilteredData(initialFilteredData["closedErrors"]);
     }
-  }, [initialfilteredDataApiRes]);
+  }, [initialFilteredData]);
 
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        setFilteredData(filteredDataApiRes["auditTrails"]);
+        setFilteredData(filteredDataApiRes["closedErrors"]);
       }
     } catch (error) {
       ErrorLogger(error);
     }
   }, [filteredDataApiRes]);
 
+  // Handle filtered data count
   useEffect(() => {
-    try {
-      if (dataRangeDrop !== "") {
-        const [start, end] = dataRangeDrop.split("-");
-        handleFilteredDataCount(start, end);
-      }
-    } catch (error) {
-      ErrorLogger(error);
+    if (dataRangeDrop !== "") {
+      const [start, end] = dataRangeDrop.split("-");
+      handleFilteredDataCount(start, end);
     }
   }, []);
 
@@ -154,23 +101,23 @@ const Close = () => {
     }));
   };
 
-  const handleCheckboxChange = (messageId) => {
-    setSelectedMessages((prevSelected) => {
-      if (prevSelected.includes(messageId)) {
+  const handleCheckboxChange = (errorId) => {
+    setSelectedErrors((prevSelected) => {
+      if (prevSelected.includes(errorId)) {
         // If the message ID is already selected, uncheck it
-        return prevSelected.filter((id) => id !== messageId);
+        return prevSelected.filter((id) => id !== errorId);
       } else {
         // Otherwise, add it to the selected list
-        return [...prevSelected, messageId];
+        return [...prevSelected, errorId];
       }
     });
   };
 
   const handleSelectAllChange = (e) => {
     if (e.target.checked) {
-      setSelectedMessages(data.map((row) => row.messageId));
+      setSelectedErrors(filteredData.map((row) => row.errorId));
     } else {
-      setSelectedMessages([]);
+      setSelectedErrors([]);
     }
   };
 
@@ -181,38 +128,104 @@ const Close = () => {
     }));
   };
 
-  const handleSubmit = async () => {
-    // Handle form submission
-    console.log(selectedMessages);
+  // Handle closing selected errors
+  const handleCloseError = async () => {
+    if (selectedErrors.length === 0) {
+      toast.info("No errors selected for closing.");
+      return;
+    }
+
+    const payload = {
+      serverName: ERT_API_URLS.server_name,
+      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+    };
+
+    try {
+      await ApiMethods.handleApiPostAction(
+        "",
+        "",
+        ERT_API_URLS.Open_Closed_Errors_URL,
+        "",
+        "Error in Purging Error",
+        "",
+        setLoading,
+        handleRefreshPage,
+        0, // Retry count
+        payload,
+        uuid,
+        setUuid
+      );
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+  // Handle success after closing errors, fetch updated records
+  const handleRefreshPage = async () => {
+    await handleFilteredData(
+      constructFilterURL(
+        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
+      )
+    );
+    setSelectedErrors([]);
   };
 
-  const handleReset = () => {
-    setFilteredData([]);
-    setRanges([]); //clearing range value
-    setAllDataCount("0");
+  const handleReset = async () => {
+    // Clear the selected errors
+    setSelectedErrors([]);
+
+    // Reset form data
     setFormData({
       MessageId: "",
       ErrorCode: "",
       Error: "",
-      CriticalElement: "",
-      CriticalElementName: "",
+      MesObject: "",
+      MesObjectValue: "",
       AdapterType: "",
       MessageType: "",
       AdapterName: "",
       OriginalMessageContent: "",
     });
-    typeaheadRef.current.forEach((ref) => {
-      if (ref) {
-        ref.clear();
+
+    // Reset date filters
+    setStartDate(null);
+    setEndDate(null);
+
+    // Clear any typeahead filters (assuming this is being used in your form)
+    typeaheadRef.current.forEach((ref) => ref && ref.clear());
+
+    // Reset any filtered data or ranges
+    setFilteredData([]);
+    setRanges([]);
+
+    // Re-fetch the initial data (with no filters applied)
+    const initialURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+    await handleFilteredData(initialURL);
+
+    // Optionally, reset pagination range if needed
+    setDataRangeDrop("1-10000"); // Reset data range drop-down if applicable
+  };
+  // Construct filter URL with form data and date range
+  const constructFilterURL = (url) => {
+    let filterURL = url;
+    Object.keys(formData).forEach((key) => {
+      if (formData[key]) {
+        filterURL += `&${key}=${formData[key]}`;
       }
     });
-    setFromDate(null);
-    setToDate(null);
+
+    if (startDate) {
+      filterURL += `&StartDate=${formatDate(startDate)}`;
+    }
+    if (endDate) {
+      filterURL += `&EndDate=${formatDate(endDate)}`;
+    }
+
+    return filterURL;
   };
 
   // Check if all individual checkboxes are selected
   const isAllSelected =
-    data.length > 0 && selectedMessages.length === data.length;
+    filteredData.length > 0 && selectedErrors.length === filteredData.length;
 
   // Grid columns with checkboxes
   const gridColumns = [
@@ -231,27 +244,41 @@ const Close = () => {
         <Form.Check
           custom="true"
           type="checkbox"
-          id={`checkbox-${row.original.messageId}`}
-          checked={selectedMessages.includes(row.original.messageId)}
-          onChange={() => handleCheckboxChange(row.original.messageId)}
+          id={`checkbox-${row.original.errorId}`}
+          checked={selectedErrors.includes(row.original.errorId)}
+          onChange={() => handleCheckboxChange(row.original.errorId)}
         />
       ),
     },
+    { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
-    { Header: "Critical Element", accessor: "criticalElement" },
+    { Header: "MES Object", accessor: "mesObject" },
+    { Header: "MES Object Value", accessor: "mesObjectValue" },
+    { Header: "Interface Type", accessor: "interfaceType" },
     { Header: "Error", accessor: "error" },
     { Header: "Error Code", accessor: "errorCode" },
     { Header: "Adapter Type", accessor: "adapterType" },
     { Header: "Response", accessor: "response" },
     { Header: "Original Message Content", accessor: "originalMessageContent" },
     { Header: "Request", accessor: "request" },
+    { Header: "Sequencer Error", accessor: "sequencerError" },
   ];
 
   const handleFilter = async () => {
     try {
-      let FilterURL = `${ERT_API_URLS.Reprocess_URL}`;
+      const isFormDataEmpty = Object.keys(formData).every(
+        (key) => !formData[key]
+      );
+
+      const isDateRangeEmpty = startDate === null && endDate === null;
+
+      if (isFormDataEmpty && isDateRangeEmpty) {
+        toast.info("No data to filter");
+        return;
+      }
+      let FilterURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=192.168.1.33`;
 
       // Append form data to URL
       Object.keys(formData).forEach((key) => {
@@ -260,57 +287,61 @@ const Close = () => {
         }
       });
 
-      if (fromDate !== null) {
-        FilterURL += `&fromDate=${formatDate(fromDate)}`;
+      if (startDate !== null) {
+        FilterURL += `&StartDate=${formatDate(startDate)}`;
       }
-      if (toDate !== null) {
-        FilterURL += `&toDate=${formatDate(toDate)}`;
+      if (endDate !== null) {
+        FilterURL += `&EndDate=${formatDate(endDate)}`;
       }
 
-      await ApiMethods.handleApiGetAction(
+      let apiResponse = await ApiMethods.handleApiGetAction(
         FilterURL,
         "Records doesn't exist.",
         retryCount,
         setLoading,
         setFilteredDataApiRes
       );
-      // if (apiResponse !== null) {
-      //   setAllDataCount(apiResponse["totalRecords"]);
-      // } else {
-      //   setAllDataCount("0");
-      // }
+      if (apiResponse !== null) {
+        setAllDataCount(apiResponse["totalRecords"]);
+        setFilteredData(apiResponse["closedErrors"]);
+      } else {
+        setAllDataCount("0");
+        setFilteredData([]);
+      }
     } catch (error) {
       ErrorLogger(error);
     }
   };
 
+  // Handle filtered data based on URL
   const handleFilteredData = async (url) => {
-    //calling Get method
-    await ApiMethods.handleApiGetAction(
-      url,
-      "Records doesn't exist.",
-      retryCount,
-      setLoading,
-      setInitialFilteredDataApiRes,
-      "Error in fetching filtered data."
-    );
+    try {
+      const response = await ApiMethods.handleApiGetAction(
+        url,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setInitialFilteredData
+      );
+      setAllDataCount(response?.totalRecords || "0");
+      console.log(response);
+    } catch (error) {
+      ErrorLogger(error);
+    }
   };
-
+  // Handle filtered data count
   const handleFilteredDataCount = async (startRow, endRow) => {
-    //calling Get method
-    const apiResponse = await ApiMethods.handleApiGetAction(
-      `${ERT_API_URLS.Reprocess_URL}startValue=${startRow}&endValue=${endRow}`,
-      "Records doesn't exist.",
-      retryCount,
-      setLoading,
-      setAllDataCountApiRes,
-      "Error in fetching filtered data count."
-    );
-
-    if (apiResponse !== null) {
-      setAllDataCount(apiResponse["totalRecords"]);
-    } else {
-      setAllDataCount("0");
+    try {
+      const apiResponse = await ApiMethods.handleApiGetAction(
+        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setAllDataCount
+      );
+      setAllDataCount(apiResponse?.totalRecords || "0");
+    } catch (error) {
+      ErrorLogger(error);
     }
   };
 
@@ -361,19 +392,21 @@ const Close = () => {
 
   return (
     <div className="">
-      <div className="d-flex flex-wrap mt-4 mb-4 align-items-center gap-3">
+      <ToastContainer />
+      <div className="d-flex flex-row flex-wrap align-items-center mt-2 mb-4 gap-3">
         <div>
           <label className="module-header" style={{ fontSize: "18px" }}>
-            Total Un-Processed Error (Error Count :{" "}
-            {/* {allDataCount ? allDataCount : ""} */})
+            Closed Error Count : {allDataCount ? allDataCount : ""}
           </label>
         </div>
-        <div className="d-flex flex-row">
-          <label style={{ marginTop: "0.375rem" }}>Filtered Data Range</label>
+        <div className="d-flex align-items-center">
+          <label className="me-2" style={{ marginTop: "0.375rem" }}>
+            Filtered Data Range
+          </label>
 
           <Typeahead
             id="instance-range-typeahead"
-            className="ms-2"
+            className="me-2"
             style={{ width: "8.7rem" }}
             labelKey="name"
             options={ranges}
@@ -384,14 +417,19 @@ const Close = () => {
             inputProps={{ readOnly: true }} // Make input field read-only
           />
         </div>
-        <Button
-          variant="outline-primary"
-          size="sm"
-          style={{ width: "7rem" }}
-          onClick={() => setShowFilters((prev) => !prev)}
+
+        <OverlayTrigger
+          placement="right"
+          overlay={<Tooltip id="filter-tooltip">Apply Filter</Tooltip>}
         >
-          {showFilters ? "Hide Filters" : "Show Filters"}
-        </Button>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <FaFilter />
+          </Button>
+        </OverlayTrigger>
       </div>
 
       <div className="d-flex gap-3">
@@ -400,7 +438,7 @@ const Close = () => {
             className="d-flex flex-column rounded border overflow-auto"
             style={{
               height: "76vh",
-              width: "100vh",
+              width: "40rem",
             }}
           >
             <div className="flex-grow-1 overflow-auto">
@@ -436,53 +474,33 @@ const Close = () => {
                     />
                   </Form.Group>
 
-                  <Form.Group controlId="CriticalElement">
-                    <Form.Label>Critical Element</Form.Label>
+                  <Form.Group controlId="MesObject">
+                    <Form.Label>Mes Object</Form.Label>
                     <Form.Control
                       type="text"
-                      name="CriticalElement"
-                      value={formData.CriticalElement}
+                      name="MesObject"
+                      value={formData.MesObject}
                       onChange={handleInputChange}
                     />
                   </Form.Group>
 
-                  <Form.Group controlId="CriticalElementName">
-                    <Form.Label>Critical Element Name</Form.Label>
-                    <Typeahead
-                      id="CriticalElementName"
-                      labelKey="label"
-                      options={criticalElementOptions}
-                      filterBy={() => true}
-                      inputProps={{ readOnly: true }}
-                      selected={
-                        formData.CriticalElementName
-                          ? [{ label: formData.CriticalElementName }]
-                          : []
-                      }
-                      onChange={(selected) =>
-                        handleDropdownChange(selected, "CriticalElementName")
-                      }
-                      placeholder="Choose a Critical Element Name..."
+                  <Form.Group controlId="MesObjectValue">
+                    <Form.Label>Mes Object Value</Form.Label>
+                    <Form.Control
+                      name="MesObjectValue"
+                      type="text"
+                      value={formData.MesObjectValue}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
 
                   <Form.Group controlId="AdapterType">
                     <Form.Label>Adapter Type</Form.Label>
-                    <Typeahead
-                      id="AdapterType"
-                      labelKey="label"
-                      options={adapterTypeOptions}
-                      filterBy={() => true}
-                      inputProps={{ readOnly: true }}
-                      selected={
-                        formData.AdapterType
-                          ? [{ label: formData.AdapterType }]
-                          : []
-                      }
-                      onChange={(selected) =>
-                        handleDropdownChange(selected, "AdapterType")
-                      }
-                      placeholder="Choose an Adapter Type..."
+                    <Form.Control
+                      name="AdapterType"
+                      type="text"
+                      value={formData.AdapterType}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
 
@@ -498,21 +516,11 @@ const Close = () => {
 
                   <Form.Group controlId="MessageType">
                     <Form.Label>Message Type</Form.Label>
-                    <Typeahead
-                      id="MessageType"
-                      labelKey="label"
-                      options={messageTypeOptions}
-                      filterBy={() => true}
-                      inputProps={{ readOnly: true }}
-                      selected={
-                        formData.MessageType
-                          ? [{ label: formData.MessageType }]
-                          : []
-                      }
-                      onChange={(selected) =>
-                        handleDropdownChange(selected, "MessageType")
-                      }
-                      placeholder="Choose a Message Type..."
+                    <Form.Control
+                      type="text"
+                      name="MessageType"
+                      value={formData.MessageType}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
 
@@ -552,15 +560,15 @@ const Close = () => {
                     </label>
                     <DatePicker
                       id="fromDate"
-                      selected={fromDate}
-                      onChange={(date) => setFromDate(date)}
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
                       className="form-control"
                       dateFormat="MM/dd/yyyy"
                       showMonthDropdown
                       showYearDropdown
                       dropdownMode="select"
                       placeholderText="Choose a date"
-                      maxDate={toDate || new Date()}
+                      maxDate={endDate || new Date()}
                     />
                   </div>
                   <div>
@@ -569,22 +577,22 @@ const Close = () => {
                     </label>
                     <DatePicker
                       id="toDate"
-                      selected={toDate}
-                      onChange={(date) => setToDate(date)}
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
                       className="form-control"
                       dateFormat="MM/dd/yyyy"
                       showMonthDropdown
                       showYearDropdown
                       dropdownMode="select"
                       placeholderText="Choose a date"
-                      minDate={fromDate}
+                      minDate={startDate}
                       maxDate={new Date()}
                     />
                   </div>
                 </div>
               </Form>
             </div>
-            <div className="d-flex justify-content-end gap-3 me-3 mb-2 position-sticky bottom-0 p-2">
+            <div className="d-flex justify-content-end gap-3 me-3 mb-2  position-sticky bottom-0 p-2">
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -602,7 +610,7 @@ const Close = () => {
                 style={{ width: "7rem" }}
                 onClick={async () => await handleFilter()}
               >
-                Filter
+                Apply
               </Button>
             </div>
           </div>
@@ -611,53 +619,21 @@ const Close = () => {
         {/* Table Utility */}
         <div style={{ height: "76vh", overflowX: "auto" }}>
           <TableUtility
-            gridColumns={gridColumns}
-            gridData={data}
+            gridColumns={gridColumns.filter((column) => column.show !== false)}
+            gridData={filteredData}
             pageSizes={[5, 10, 20]}
           />
         </div>
       </div>
-      <div className="d-flex justify-content-end gap-3 pt-2 ms-3 me-3 border-top border-subtle">
+      <div className="d-flex justify-content-end mt-2 gap-3 pt-2 ms-3 me-3 border-top border-subtle">
         <Button
           id="close-errors-btn"
           variant="outline-secondary"
           size="sm"
-          onClick={""}
+          onClick={handleCloseError}
         >
-          Open
+          Re-Open
         </Button>
-        <Button
-          id="close-errors-btn"
-          variant="outline-primary"
-          size="sm"
-          onClick={handleSubmit}
-        >
-          Archive
-        </Button>
-        {/* <Button
-          id="close-errors-btn"
-          variant="outline-primary"
-          size="sm"
-          onClick={""}
-        >
-          Archive All
-        </Button> */}
-        <Button
-          id="close-errors-btn"
-          variant="outline-danger"
-          size="sm"
-          onClick={""}
-        >
-          Purge
-        </Button>
-        {/* <Button
-          id="close-errors-btn"
-          variant="outline-danger"
-          size="sm"
-          onClick={""}
-        >
-          Purge All
-        </Button> */}
       </div>
     </div>
   );

@@ -10,11 +10,9 @@ const XMLModal = ({ show, handleClose, xmlData }) => {
 
   // Try formatting the XML data and handle errors
   try {
-    // Ensure xmlData is valid and format it
     formattedXML = xmlFormatter(xmlData || "");
   } catch (error) {
-    console.error("Failed to parse XML:", error);
-    formattedXML = "<error>Invalid XML data</error>"; // Show a simple error message if XML is invalid
+    formattedXML = "<error>Invalid XML data</error>";
   }
 
   return (

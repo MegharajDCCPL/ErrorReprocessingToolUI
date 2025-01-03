@@ -30,10 +30,10 @@ const handleApiPostAction = async (
         "Content-Type": "application/json",
         UUID: uuid,
       },
-      withCredentials: true,
+      // withCredentials: true,
     });
 
-    toast.success(successMessage);
+    showToast(postResponse.data);
     retryCount = 0;
     setLoading(false);
     setUuid(uuidv4());

@@ -20,21 +20,38 @@ const RowModal = ({ show, handleClose, rowData }) => {
         <Form>
           {rowData &&
             Object.keys(rowData).map((key) => {
-              // Check if the value is XML data (e.g., request, response, or originalMessage)
+              const rowError = key === "error";
+
               const isXML =
                 key === "request" ||
                 key === "response" ||
                 key === "originalMessageContent" ||
                 key === "errorXML";
 
+              let formattedXML = rowData[key];
+
+              if (isXML) {
+                try {
+                  formattedXML = xmlFormatter(rowData[key] || "");
+                } catch (error) {
+                  formattedXML = "<error>Invalid XML data</error>";
+                }
+              }
+
               return (
                 <Form.Group key={key} className="mb-3">
                   <Form.Label>{key}</Form.Label>
-                  {isXML ? (
-                    // Format XML to add indentation and line breaks
+                  {rowError ? (
+                    <Form.Control
+                      as="textarea"
+                      value={rowData[key] || ""}
+                      readOnly
+                      style={{ height: "200px" }}
+                    />
+                  ) : isXML ? (
                     <div style={{ height: "300px" }}>
                       <CodeMirror
-                        value={xmlFormatter(rowData[key] || "")} // Format the XML
+                        value={formattedXML} // Use the formatted or error message XML
                         options={{
                           mode: "xml",
                           readOnly: true,
