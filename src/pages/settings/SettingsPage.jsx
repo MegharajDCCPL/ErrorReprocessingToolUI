@@ -7,6 +7,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../../components/common/ErrorLogger";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 const SettingsPage = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +27,7 @@ const SettingsPage = () => {
   const [usersToUpdate, setUsersToUpdate] = useState([]);
   const [userOption, setUserOption] = useState([]);
   const [interfaceUsersToRemove, setInterfaceUsersToRemove] = useState([]);
+  const [archiveAll, setArchiveAll] = useState(false);
 
   const [errors, setErrors] = useState({});
   const typeaheadInterfaceRef = useRef();
@@ -94,45 +98,52 @@ const SettingsPage = () => {
   const handleAddUser = () => {
     const { interfaceId, username, emailId } = formData;
 
-    // Validate input
-    if (interfaceId && username) {
-      // Update the grid data with the new user
-      setGridData((prevGridData) => [
-        ...prevGridData,
-        { interfaceId, username, emailId },
-      ]);
-
-      // Reset formData
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        username: "",
-        emailId: "",
-      }));
-
-      // Maintain state for added users
-      const newUserToUpdate = {
-        interfaceId: interfaceId,
-        username: username,
-        emailId: emailId,
-        isDeleted: undefined,
-        isAdded: true,
-      };
-
-      setUsersToUpdate((prevUsersToUpdate) => {
-        // Avoid adding duplicates
-        if (!prevUsersToUpdate.some((user) => user.username === username)) {
-          return [...prevUsersToUpdate, newUserToUpdate];
-        }
-        return prevUsersToUpdate;
-      });
-
-      // Clear the Typeahead after adding the user
-      if (typeaheadRef.current && typeaheadRef.current[1]) {
-        typeaheadRef.current[1].clear();
-      }
-    } else {
-      console.log("Please select valid interfaceId and username");
+    // Validate inputs
+    if (!interfaceId) {
+      toast.info("Please select an interface before adding a user.");
+      return;
     }
+
+    if (!username) {
+      toast.info("Please enter a username.");
+      return;
+    }
+
+    // Check for duplicate entries
+    if (gridData.some((user) => user.username === username)) {
+      toast.info("User already exists in the grid.");
+      return;
+    }
+
+    // Add the user to the grid data
+    setGridData((prevGridData) => [
+      ...prevGridData,
+      { interfaceId, username, emailId },
+    ]);
+
+    // Reset formData and typeahead
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      username: "",
+      emailId: "",
+    }));
+
+    if (typeaheadUserRef.current) {
+      typeaheadUserRef.current.clear();
+    }
+
+    // Add user to the state for updates
+    setUsersToUpdate((prevUsersToUpdate) => [
+      ...prevUsersToUpdate,
+      {
+        interfaceId,
+        username,
+        emailId,
+        isAdded: true,
+      },
+    ]);
+
+    // toast.success("User added successfully!");
   };
 
   const handleDeleteUser = (row) => {
@@ -147,9 +158,12 @@ const SettingsPage = () => {
         ]);
       }
 
-      // Removing the user from `gridData`
+      // Removing the specific user from `gridData`
       const updatedGridUsers = gridData.filter(
-        (user) => user.interfaceUserId !== userIdInGridToRemove
+        (user, index) =>
+          !(
+            user.interfaceUserId === userIdInGridToRemove && index === row.index
+          )
       );
       setGridData(updatedGridUsers);
 
@@ -174,6 +188,8 @@ const SettingsPage = () => {
     { username: "Sanoj", emailId: "Sanoj@dhruvts.com" },
     { username: "Sujit Kumar", emailId: "Sujit@dhruvts.com" },
     { username: "Megharaj", emailId: "Megharaj@dhruvts.com" },
+    { username: "Arun", emailId: "arun@dhruvts.com" },
+    { username: "Shrikanth", emailId: "shrikanth@dhruvts.com" },
   ];
 
   const filteredUserOptions = userOptions.filter(
@@ -181,8 +197,8 @@ const SettingsPage = () => {
   );
 
   const gridColumns = [
-    { Header: "interface Id", accessor: "interfaceId" },
-    { Header: "interface user Id", accessor: "interfaceUserId" },
+    { Header: "interface Id", accessor: "interfaceId", show: false },
+    { Header: "interface user Id", accessor: "interfaceUserId", show: false },
     { Header: "Username", accessor: "username" },
     { Header: "Email", accessor: "emailId" },
     {
@@ -205,7 +221,6 @@ const SettingsPage = () => {
         </div>
       ),
     },
-    // console.log("myintid", row.interfaceUserId),
   ];
 
   const resetForm = () => {
@@ -251,7 +266,13 @@ const SettingsPage = () => {
 
       payload["interfaceUserListToAdd"] = interfaceUserListToAdd;
       payload["interfaceUsersToRemove"] = interfaceUsersToRemove; // Use the state here
-
+      if (
+        payload["interfaceUserListToAdd"].length === 0 &&
+        payload["interfaceUsersToRemove"].length === 0
+      ) {
+        toast.info("No changes to submit.");
+        return;
+      }
       await ApiMethods.handleApiPatchAction(
         ERT_API_URLS.UsersList_URL,
         formData,
@@ -277,16 +298,10 @@ const SettingsPage = () => {
         style={{ height: "87vh" }}
         className={`${styles["Settings-page"]} d-flex flex-column overflow-auto ms-3 me-3 mt-3 mb-2 gap-3`}
       >
-        <div>
-          <h5>Enable Auto Services</h5>
-          <div className={`${styles["Settings"]} d-flex flex-row`}>
-            <Form.Check className="ms-3" type="checkbox" label="Archive All" />
-            <Form.Check className="ms-3" type="checkbox" label="Purge All" />
-          </div>
-        </div>
+        <ToastContainer />
         <div className="d-flex flex-column ">
-          <h5>Interface Group Management</h5>
           <div className={`${styles["Settings-interface"]} w-auto`}>
+            <h5>Interface Group Management</h5>
             <div>
               <Form.Group style={{ width: "14rem" }}>
                 <Form.Label>Select Interface</Form.Label>
@@ -334,7 +349,9 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
-      <div className="d-flex justify-content-end  me-3 mb-2">
+      <div
+        className={`d-flex justify-content-end gap-3 mb-2 me-3 ms-3 pt-2 border-top border-subtle`}
+      >
         <Button variant="outline-secondary" size="sm" onClick={resetForm}>
           Reset
         </Button>

@@ -3,7 +3,7 @@ import styles from "./MiddleContainer.module.css";
 
 const MiddleContainer = () => {
   return (
-    <div className={`${styles["whole-container"]} bg-light flex-grow-1 p-2`}>
+    <div className="bg-light flex-grow-1 overflow-auto">
       <Outlet />
     </div>
   );
