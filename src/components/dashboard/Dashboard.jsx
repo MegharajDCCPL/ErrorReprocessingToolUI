@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import ChartsComponent from "../dashboard/ChartComponent";
 import TableUtility from "../common/modified-datatable/TableUtility";
-import data from "../../data/Data";
 import ErrorStatsCard from "../dashboard/ErrorStatsCard";
+import ApiMethods from "../../utils/ApiMethods";
+import ERT_API_URLS from "../../utils/ERTConfig";
+import ErrorLogger from "../common/ErrorLogger";
 import { useUser } from "../common/UserProvider";
 
 const Dashboard = () => {
-  const { setSelectedComponentName } = useUser();
+  const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("dashboard");
   }, []);
+  const [loading, setLoading] = useState(false);
+  const [errorCounts, setErrorCounts] = useState([]);
+  const [recentErrors, setRecentErrors] = useState([]);
 
   // Grid columns for the table
   const gridColumns = [
@@ -31,30 +36,63 @@ const Dashboard = () => {
 
   // State to store error stats fetched from the API
   const [errorStats, setErrorStats] = useState({
-    totalunprocessederrors: 9,
-    totalerrorsthismonth: 5,
-    errorsreprocessedthismonth: 2,
-    totalunprocessederrorsthismonth: 3,
+    openCount: 0,
+    reprocessedCount: 0,
+    closedCount: 0,
+    totalCount: 0,
   });
 
   // Fetch data from API when component mounts
-  // useEffect(() => {
-  //  try {
-  //     await ApiMethods.handleApiGetAction(
-  //       API_URLS.ServerConfig_URL,
-  //       "Records doesn't exist.",
-  //       0,
-  //       setLoading,
-  //       setServerApiResponse,
-  //       "Error in fetching servers"
-  //     );
-  //   } catch (error) {
-  //     ErrorLogger(error);
-  //   }
-  // }, []);
+  useEffect(() => {
+    fetchRecentErrors();
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      let URL = `${ERT_API_URLS.Error_Counts_URL}?ServerName=${userDetails.serverName}`;
+      const response = await ApiMethods.handleApiGetAction(
+        URL,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setErrorCounts,
+        "Error in fetching servers"
+      );
+
+      if (response && response.errorCounts && response.errorCounts.length > 0) {
+        const errorData = response.errorCounts[0];
+
+        setErrorStats({
+          openCount: errorData.openCount || 0,
+          reprocessedCount: errorData.reprocessedCount || 0,
+          closedCount: errorData.closedCount || 0,
+          totalCount: errorData.totalCount || 0,
+        });
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+  const fetchRecentErrors = async () => {
+    try {
+      let URL = `${ERT_API_URLS.Recent_Errors_URL}?ServerName=${userDetails.serverName}`;
+      const response = await ApiMethods.handleApiGetAction(
+        URL,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setRecentErrors,
+        "Error in fetching errors"
+      );
+      console.log(response);
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
 
   // Display loading state while fetching data
-  if (!errorStats) {
+  if (loading || !errorStats) {
     return <div>Loading...</div>;
   }
 
@@ -74,7 +112,7 @@ const Dashboard = () => {
       <div style={{ height: "76vh", overflowX: "auto" }}>
         <TableUtility
           gridColumns={gridColumns.filter((column) => column.show !== false)}
-          gridData={data}
+          gridData={recentErrors}
           pageSizes={[5, 10, 20]}
         />
       </div>

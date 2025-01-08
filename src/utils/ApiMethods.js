@@ -33,11 +33,15 @@ const handleApiPostAction = async (
       // withCredentials: true,
     });
 
-    showToast(postResponse.data);
+    if (Object.keys(postResponse.data).length != 1)
+      showToast(postResponse.data);
     retryCount = 0;
     setLoading(false);
     setUuid(uuidv4());
-    resetForm();
+    if (resetForm) {
+      resetForm();
+    }
+    return postResponse.data;
   } catch (error) {
     ErrorLogger(error);
     if (error.name === "ValidationError") {

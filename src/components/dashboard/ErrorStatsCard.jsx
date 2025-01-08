@@ -12,22 +12,10 @@ const StatCard = ({ title, value }) => (
 const ErrorStatsCard = ({ data }) => {
   return (
     <div className={styles["error-stats-container"]}>
-      <StatCard
-        title="Unprocessed Error Count"
-        value={data.totalunprocessederrors}
-      />
-      <StatCard
-        title="Errors Logged This Month"
-        value={data.totalerrorsthismonth}
-      />
-      <StatCard
-        title="Reprocessed Errors This Month"
-        value={data.errorsreprocessedthismonth}
-      />
-      <StatCard
-        title="Unprocessed Errors This Month"
-        value={data.totalunprocessederrorsthismonth}
-      />
+      <StatCard title="Open Error Count" value={data.openCount} />
+      <StatCard title="Reprocessed Error Count" value={data.reprocessedCount} />
+      <StatCard title="Closed Error Count" value={data.closedCount} />
+      <StatCard title="Total Error Count" value={data.totalCount} />
     </div>
   );
 };

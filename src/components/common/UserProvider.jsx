@@ -3,15 +3,15 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [selectedComponentName, setSelectedComponentName] = useState("");
-  // const [userDetails, setUserDetails] = useState({});
+  const [userDetails, setUserDetails] = useState({});
 
   return (
     <UserContext.Provider
       value={{
         selectedComponentName,
         setSelectedComponentName,
-        // userDetails,
-        // setUserDetails,
+        userDetails,
+        setUserDetails,
       }}
     >
       {children}
