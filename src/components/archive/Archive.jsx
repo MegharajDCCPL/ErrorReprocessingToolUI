@@ -12,9 +12,11 @@ import ErrorLogger from "../common/ErrorLogger";
 import { v4 as uuidv4 } from "uuid";
 import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
+import LoadingSpinner from "../common/LoadingSpinner";
+import { skeletonClasses } from "@mui/material";
 
 const Archive = () => {
-  const { setSelectedComponentName } = useUser();
+  const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("archive");
   }, []);
@@ -60,6 +62,58 @@ const Archive = () => {
   const [isArchiveAuto, setIsArchiveAuto] = useState(false);
   const [archiveText, setArchiveText] = useState("");
 
+  useEffect(() => {
+    fetchRetentionDays();
+  }, []);
+  const fetchRetentionDays = async () => {
+    try {
+      let url = `${ERT_API_URLS.Retention_Days_URL}GetAutoArchiveRetentionDays?ServerName=${userDetails.serverName}`;
+
+      // Call the API and wait for the response
+      const response = await ApiMethods.handleApiGetAction(
+        url,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setArchiveText
+      );
+      if (response != null) {
+        setIsArchiveAuto(true);
+        setLoading(true);
+      } else {
+        setIsArchiveAuto(false);
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+  const handleAutoArchive = async () => {
+    try {
+      if (archiveText !== "") {
+        await ApiMethods.handleApiPostAction(
+          "",
+          "",
+          `${ERT_API_URLS.Retention_Days_URL}UpdateRetentionDays?serverName=${userDetails.serverName}&settingType=AutoArchive&durationData=${archiveText}`,
+          "",
+          "Error in Purging Error",
+          "",
+          setLoading,
+          handleRefreshPage,
+          0,
+          "",
+          uuid,
+          setUuid
+        );
+        // Optionally, you can also update other states or show a success message
+        console.log("Retention days updated successfully");
+      } else {
+        console.log("Archive text is empty. Nothing to update.");
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+
   // Generate ranges based on all data count
   useEffect(() => {
     if (allDataCount !== "") {
@@ -71,7 +125,7 @@ const Archive = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
+      let generateUrl = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
       if (isFilteredBtnClicked) {
         generateUrl = constructFilterURL(generateUrl);
@@ -147,7 +201,7 @@ const Archive = () => {
     }
 
     const payload = {
-      serverName: ERT_API_URLS.server_name,
+      serverName: userDetails.serverName,
       errorIds: selectedErrors.map((id) => parseInt(id, 10)),
     };
 
@@ -175,7 +229,7 @@ const Archive = () => {
   const handleRefreshPage = async () => {
     await handleFilteredData(
       constructFilterURL(
-        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
+        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`
       )
     );
     setSelectedErrors([]);
@@ -210,7 +264,7 @@ const Archive = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+    const initialURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
@@ -291,7 +345,7 @@ const Archive = () => {
         toast.info("No data to filter");
         return;
       }
-      let FilterURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}`;
+      let FilterURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`;
 
       // Append form data to URL
       Object.keys(formData).forEach((key) => {
@@ -346,7 +400,7 @@ const Archive = () => {
   const handleFilteredDataCount = async (startRow, endRow) => {
     try {
       const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
+        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
         "Records doesn't exist.",
         0,
         setLoading,
@@ -464,7 +518,11 @@ const Archive = () => {
               style={{ width: "8.7rem" }}
               onChange={(e) => setArchiveText(e.target.value)}
             />
-            <Button variant="outline-primary" size="sm" onClick={() => {}}>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={async () => handleAutoArchive()}
+            >
               Archive
             </Button>
           </div>

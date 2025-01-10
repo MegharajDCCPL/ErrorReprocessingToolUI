@@ -5,13 +5,28 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ERT</title>
-    <div id="API_URL" value="https://192.168.1.33:8063"></div>
-    <div id="Nexus_UI_URL" value="http://localhost:5174"></div>
-    <div id="Nexus_API_URL" value="https://192.168.1.33:8060"></div>
-    <!-- <div id="API_URL" value="https://localhost:7092"></div> -->
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden; /* to prevent scrolling */
+      }
+      .fit-to-viewport {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="API_URL" value="https://192.168.1.33:8063"></div>
+    <div id="Nexus_UI_URL" value="http://localhost:5173"></div>
+    <div id="Nexus_API_URL" value="https://192.168.1.33:8060"></div>
+
+    <div id="root" class="fit-to-viewport"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

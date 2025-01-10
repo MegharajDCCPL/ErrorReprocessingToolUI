@@ -13,7 +13,7 @@ import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
 
 const Close = () => {
-  const { setSelectedComponentName } = useUser();
+  const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("close");
   }, []);
@@ -59,7 +59,7 @@ const Close = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
+      let generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
       if (isFilteredBtnClicked) {
         generateUrl = constructFilterURL(generateUrl);
@@ -136,7 +136,7 @@ const Close = () => {
     }
 
     const payload = {
-      serverName: ERT_API_URLS.server_name,
+      serverName: userDetails.serverName,
       errorIds: selectedErrors.map((id) => parseInt(id, 10)),
     };
 
@@ -163,7 +163,7 @@ const Close = () => {
   const handleRefreshPage = async () => {
     await handleFilteredData(
       constructFilterURL(
-        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
+        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`
       )
     );
     setSelectedErrors([]);
@@ -198,7 +198,7 @@ const Close = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+    const initialURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
@@ -333,7 +333,7 @@ const Close = () => {
   const handleFilteredDataCount = async (startRow, endRow) => {
     try {
       const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
+        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
         "Records doesn't exist.",
         0,
         setLoading,

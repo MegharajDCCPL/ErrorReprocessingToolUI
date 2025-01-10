@@ -14,7 +14,7 @@ import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
 
 const Purge = () => {
-  const { setSelectedComponentName } = useUser();
+  const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("purge");
   }, []);
@@ -52,6 +52,53 @@ const Purge = () => {
   const [isPurgeAuto, setIsPurgeAuto] = useState(false);
   const [purgeText, setPurgeText] = useState("");
 
+  useEffect(() => {
+    fetchRetentionDays();
+  }, []);
+  const fetchRetentionDays = async () => {
+    try {
+      let url = `${ERT_API_URLS.Retention_Days_URL}GetAutoPurgeRetentionDays?ServerName=${userDetails.serverName}`;
+
+      // Call the API and wait for the response
+      const response = await ApiMethods.handleApiGetAction(
+        url,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setPurgeText
+      );
+      if (response != null) {
+        setIsPurgeAuto(true);
+      } else {
+        setIsPurgeAuto(false);
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+  const handleAutoPurge = async () => {
+    try {
+      if (purgeText !== "") {
+        await ApiMethods.handleApiPostAction(
+          "",
+          "",
+          `${ERT_API_URLS.Retention_Days_URL}UpdateRetentionDays?serverName=${userDetails.serverName}&settingType=AutoPurge&durationData=${purgeText}`,
+          "",
+          "Error in Purging Error",
+          "",
+          setLoading,
+          handleRefreshPage,
+          0,
+          "",
+          uuid,
+          setUuid
+        );
+      }
+    } catch (error) {
+      ErrorLogger(error);
+    }
+  };
+
   // Generate ranges based on all data count
   useEffect(() => {
     if (allDataCount !== "") {
@@ -63,7 +110,7 @@ const Purge = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${start}&endValue=${end}`;
+      let generateUrl = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
       if (isFilteredBtnClicked) {
         generateUrl = constructFilterURL(generateUrl);
@@ -139,7 +186,7 @@ const Purge = () => {
     }
 
     const payload = {
-      serverName: ERT_API_URLS.server_name,
+      serverName: userDetails.serverName,
       errorIds: selectedErrors.map((id) => parseInt(id, 10)),
     };
 
@@ -167,7 +214,7 @@ const Purge = () => {
   const handleRefreshPage = async () => {
     await handleFilteredData(
       constructFilterURL(
-        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`
+        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${userDetails.serverName}`
       )
     );
     setSelectedErrors([]);
@@ -202,7 +249,7 @@ const Purge = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}`;
+    const initialURL = `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${userDetails.serverName}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
@@ -338,7 +385,7 @@ const Purge = () => {
   const handleFilteredDataCount = async (startRow, endRow) => {
     try {
       const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${ERT_API_URLS.server_name}&startValue=${startRow}&endValue=${endRow}`,
+        `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
         "Records doesn't exist.",
         0,
         setLoading,
@@ -457,7 +504,11 @@ const Purge = () => {
               style={{ width: "8.7rem" }}
               onChange={(e) => setPurgeText(e.target.value)}
             />
-            <Button variant="outline-danger" size="sm" onClick={() => {}}>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={async () => await handleAutoPurge()}
+            >
               Purge
             </Button>
           </div>

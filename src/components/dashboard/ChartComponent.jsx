@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { Pie, Bar, Doughnut } from "react-chartjs-2"; // Import Doughnut chart
+import { Pie, Bar } from "react-chartjs-2";
+import ApiMethods from "../../utils/ApiMethods";
+import ERT_API_URLS from "../../utils/ERTConfig";
+import { useUser } from "../../components/common/UserProvider.jsx";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -26,95 +29,167 @@ ChartJS.register(
 );
 
 const ChartsComponent = () => {
+  const { userDetails } = useUser();
   const [pieData, setPieData] = useState(null);
   const [barData, setBarData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    PieChart();
-    BarChart();
+    fetchPieChartData();
+    fetchBarChartData();
   }, []);
 
-  // Pie chart using dummy data
-  const PieChart = () => {
-    const dummyPieData = {
-      Product: 8,
-      mfgOrder: 12,
-    };
-    const total = dummyPieData.Product + dummyPieData.mfgOrder;
-    const formattedData = {
-      labels: ["Product", "mfgOrder"],
-      datasets: [
-        {
-          data: [
-            (dummyPieData.Product / total) * 100,
-            (dummyPieData.mfgOrder / total) * 100,
-          ],
-          backgroundColor: ["#5C6BC0", "#66BB6A"],
-          borderColor: ["#FFFFFF"],
-          borderWidth: 2,
-          hoverOffset: 4,
-          datalabels: {
-            anchor: "end",
-            align: "end",
-            color: "#fff",
-            backgroundColor: function (context) {
-              return context.dataset.backgroundColor;
-            },
-            borderRadius: 4,
-            font: {
-              weight: "bold",
+  // Function to fetch the data for Pie chart (for example, API call)
+  const fetchPieChartData = async () => {
+    try {
+      setLoading(true);
+      let URL = `${ERT_API_URLS.Pie_Chart_URL}?ServerName=${userDetails.serverName}`;
+      const response = await ApiMethods.handleApiGetAction(
+        URL,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setPieData,
+        "Error in fetching errors"
+      );
+
+      const categories = Object.keys(response); // Extract categories like 'irproductmsgtype', 'mfgOrder', etc.
+      const values = Object.values(response); // Extract corresponding values
+
+      // Generate a set of unique colors for each segment
+      const colors = generateColors(values.length);
+
+      const total = values.reduce((acc, value) => acc + value, 0);
+
+      const formattedData = {
+        labels: categories,
+        datasets: [
+          {
+            data: values.map((value) => (value / total) * 100),
+            backgroundColor: colors,
+            borderColor: "#FFFFFF",
+            borderWidth: 2,
+            hoverOffset: 4,
+            datalabels: {
+              anchor: "end",
+              align: "end",
+              color: "#fff",
+              backgroundColor: function (context) {
+                return context.dataset.backgroundColor;
+              },
+              borderRadius: 4,
+              font: {
+                weight: "bold",
+              },
             },
           },
-        },
-      ],
-    };
-    setPieData(formattedData);
+        ],
+      };
+      setPieData(formattedData);
+    } catch (error) {
+      console.error("Error fetching pie chart data", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Bar chart using dummy data
-  const BarChart = () => {
-    const dummyBarData = {
-      months: [
-        "December",
-        "November",
-        "October",
-        "September",
-        "August",
-        "July",
-      ],
-      errorCounts: {
-        Product: [3, 6, 0, 5, 2, 0],
-        MfgOrder: [7, 8, 2, 4, 5, 6],
-      },
-    };
+  // Helper function to generate a set of colors dynamically
+  const generateColors = (num) => {
+    const colors = [];
+    for (let i = 0; i < num; i++) {
+      colors.push(generateRandomColor());
+    }
+    return colors;
+  };
 
-    const formattedData = {
-      labels: dummyBarData.months.reverse(),
-      datasets: [
-        {
-          label: "Product Error Count",
-          data: dummyBarData.errorCounts.Product.reverse(),
-          backgroundColor: "#5C6BC0", // A clean blue shade for the Product dataset
-          borderColor: "#1565C0", // Darker blue border for better contrast
-          borderWidth: 2,
-          hoverBackgroundColor: "#5C6BC0",
-          hoverBorderColor: "#fff",
-          barThickness: 30,
-        },
-        {
-          label: "Mfg Order Error Count",
-          data: dummyBarData.errorCounts.MfgOrder.reverse(),
-          backgroundColor: "#43A047", // Professional green for Mfg Order dataset
-          borderColor: "#2C6B2F", // Darker green border for contrast
-          borderWidth: 2,
-          hoverBackgroundColor: "#2C6B2F", // Darker green for hover effect
-          hoverBorderColor: "#fff",
-          barThickness: 30,
-        },
-      ],
-    };
-    setBarData(formattedData);
+  // Helper function to generate a random color
+  const generateRandomColor = () => {
+    const randomColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+    return randomColor;
+  };
+
+  const fetchBarChartData = async () => {
+    try {
+      setLoading(true);
+      let URL = `${ERT_API_URLS.Bar_Chart_URL}?ServerName=${userDetails.serverName}`;
+      const response = await ApiMethods.handleApiGetAction(
+        URL,
+        "Records doesn't exist.",
+        0,
+        setLoading,
+        setBarData,
+        "Error in fetching errors"
+      );
+
+      if (Array.isArray(response)) {
+        // Create a month name mapping
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        const months = [...new Set(response.map((item) => item.month))];
+        const monthsWithNames = months.map(
+          (monthNumber) => monthNames[parseInt(monthNumber) - 1]
+        );
+
+        const interfaceNames = [
+          ...new Set(response.map((item) => item.interfaceName)),
+        ];
+
+        const dataset = interfaceNames.map((interfaceName) => {
+          const data = months.map((month) => {
+            const entry = response.find(
+              (item) =>
+                item.month === month && item.interfaceName === interfaceName
+            );
+            return entry ? entry.totalCount : 0;
+          });
+
+          const randomColor = generateRandomColor();
+
+          return {
+            label: interfaceName,
+            data: data,
+            backgroundColor: randomColor,
+            borderColor: "#FFFFFF",
+            borderWidth: 2,
+            datalabels: {
+              backgroundColor: randomColor,
+              color: "#fff",
+              borderRadius: 4,
+              font: {
+                weight: "bold",
+              },
+              padding: 4,
+            },
+          };
+        });
+
+        const formattedData = {
+          labels: monthsWithNames,
+          datasets: dataset,
+        };
+
+        setBarData(formattedData);
+      } else {
+        console.error("Response is not an array:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching bar chart data", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const pieOptions = {
@@ -144,56 +219,6 @@ const ChartsComponent = () => {
     },
   };
 
-  const barOptions = {
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: "Months",
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Error Count",
-        },
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (tooltipItem) => {
-            return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
-          },
-        },
-      },
-      datalabels: {
-        display: true,
-        align: "end",
-        anchor: "end",
-        backgroundColor: "#5C6BC0",
-        borderRadius: 4,
-        color: "#fff",
-        font: {
-          weight: "bold",
-        },
-        formatter: (value, context) => {
-          return value;
-        },
-      },
-    },
-    maintainAspectRatio: false,
-    elements: {
-      bar: {
-        borderWidth: 2,
-        shadowColor: "rgba(0,0,0,0.5)",
-        shadowBlur: 10,
-        shadowOffsetX: 5,
-        shadowOffsetY: 5,
-      },
-    },
-  };
-
   return (
     <div>
       {pieData && barData ? (
@@ -203,7 +228,7 @@ const ChartsComponent = () => {
             <h6 className={`${styles["headings"]} mt-4`}>Total Transactions</h6>
           </div>
           <div className={styles["bar-chart"]}>
-            <Bar data={barData} options={barOptions} />
+            <Bar data={barData} />
             <h6 className={`${styles["headings"]} mt-4`}>Error Count</h6>
           </div>
         </div>

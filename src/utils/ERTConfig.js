@@ -1,5 +1,4 @@
 const API_BASE_URL = document.getElementById("API_URL").getAttribute("value");
-// const API_BASE_URL = "https://192.168.1.33:8073";
 
 const ERT_API_URLS = {
   Open_Errors_URL: `${API_BASE_URL}/api/OpenErrors`,
@@ -14,7 +13,12 @@ const ERT_API_URLS = {
   InterfaceList_URL: `${API_BASE_URL}/interface`,
   UsersList_URL: `${API_BASE_URL}/interfaceUser`,
   NX_Users_URL: `${API_BASE_URL}/interfaceUser/users`,
-  server_name: `192.168.1.33`,
+  Error_Counts_URL: `${API_BASE_URL}/api/ErrorProcessCount/GetErrorCountsByStatus`,
+  Recent_Errors_URL: `${API_BASE_URL}/api/OpenErrors/GetRecentErrors`,
+  Pie_Chart_URL: `${API_BASE_URL}/api/ErrorProcessCount/GetErrorCountsByInterface`,
+  Bar_Chart_URL: `${API_BASE_URL}/api/ErrorProcessCount/GetErrorHistory`,
+  SubAppAccess_URL: `${API_BASE_URL}/api/SubAppsAccess/sub-apps-access`,
+  Retention_Days_URL: `${API_BASE_URL}/api/Settings/`,
 };
 
 export default ERT_API_URLS;
