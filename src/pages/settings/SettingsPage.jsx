@@ -15,11 +15,13 @@ const SettingsPage = () => {
   const [formData, setFormData] = useState({
     interfaceId: null,
     interfaceName: "",
-    username: "",
+    userId: null,
+    userName: "",
     emailId: "",
   });
   const [loading, setLoading] = useState(false);
   const [interfaceApiResponse, setInterfaceApiResponse] = useState([]);
+  const [userOptions, setUserOptions] = useState([]);
   const [gridData, setGridData] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isInterfaceSelected, setIsInterfaceSelected] = useState(false);
@@ -35,6 +37,7 @@ const SettingsPage = () => {
   let retryPatchCount = 0;
   useEffect(() => {
     fetchInterfaceList();
+    fetchUserList();
   }, []);
 
   const fetchUsersForInterface = async (selectInterfaceId) => {
@@ -71,6 +74,17 @@ const SettingsPage = () => {
     }
   };
 
+  const fetchUserList = async () => {
+    await ApiMethods.handleApiGetAction(
+      // `https://localhost:7092/interfaceUser/users`,
+      ERT_API_URLS.NX_Users_URL,
+      "Users Not Found",
+      0,
+      setLoading,
+      setUserOptions
+    );
+  };
+
   const handleInterfaceChange = async (e) => {
     if (e[0]) {
       setIsInterfaceSelected(true);
@@ -88,7 +102,8 @@ const SettingsPage = () => {
     if (selected && selected[0]) {
       setFormData((prevState) => ({
         ...prevState,
-        username: selected[0].username,
+        userId: selected[0].userId,
+        userName: selected[0].userName,
         emailId: selected[0].emailId,
       }));
     }
@@ -96,7 +111,7 @@ const SettingsPage = () => {
   };
 
   const handleAddUser = () => {
-    const { interfaceId, username, emailId } = formData;
+    const { interfaceId, userId, userName, emailId } = formData;
 
     // Validate inputs
     if (!interfaceId) {
@@ -104,13 +119,13 @@ const SettingsPage = () => {
       return;
     }
 
-    if (!username) {
+    if (!userId) {
       toast.info("Please enter a username.");
       return;
     }
 
     // Check for duplicate entries
-    if (gridData.some((user) => user.username === username)) {
+    if (gridData.some((user) => user.userId === userId)) {
       toast.info("User already exists in the grid.");
       return;
     }
@@ -118,13 +133,14 @@ const SettingsPage = () => {
     // Add the user to the grid data
     setGridData((prevGridData) => [
       ...prevGridData,
-      { interfaceId, username, emailId },
+      { interfaceId, userId, userName, emailId },
     ]);
 
     // Reset formData and typeahead
     setFormData((prevFormData) => ({
       ...prevFormData,
-      username: "",
+      userId: null,
+      userName: "",
       emailId: "",
     }));
 
@@ -137,7 +153,8 @@ const SettingsPage = () => {
       ...prevUsersToUpdate,
       {
         interfaceId,
-        username,
+        userId,
+        userName,
         emailId,
         isAdded: true,
       },
@@ -183,23 +200,15 @@ const SettingsPage = () => {
     }
   };
 
-  const userOptions = [
-    { username: "Yathish", emailId: "Yathish@dhruvts.com" },
-    { username: "Sanoj", emailId: "Sanoj@dhruvts.com" },
-    { username: "Sujit Kumar", emailId: "Sujit@dhruvts.com" },
-    { username: "Megharaj", emailId: "Megharaj@dhruvts.com" },
-    { username: "Arun", emailId: "arun@dhruvts.com" },
-    { username: "Shrikanth", emailId: "shrikanth@dhruvts.com" },
-  ];
-
   const filteredUserOptions = userOptions.filter(
-    (user) => !gridData.some((gridUser) => gridUser.username === user.username)
+    (user) => !gridData.some((gridUser) => gridUser.userId === user.userId)
   );
 
   const gridColumns = [
     { Header: "interface Id", accessor: "interfaceId", show: false },
     { Header: "interface user Id", accessor: "interfaceUserId", show: false },
-    { Header: "Username", accessor: "username" },
+    { Header: "User Id", accessor: "userId" },
+    { Header: "Username", accessor: "userName" },
     { Header: "Email", accessor: "emailId" },
     {
       Header: "Action",
@@ -228,7 +237,8 @@ const SettingsPage = () => {
       setFormData({
         interfaceId: null,
         interfaceName: "",
-        username: "",
+        userId: null,
+        userName: "",
         emailId: "",
       });
       setGridData([]);
@@ -258,7 +268,8 @@ const SettingsPage = () => {
           interfaceUserListToAdd.push({
             interfaceUserId: 0,
             interfaceId: data.interfaceId,
-            username: data.username,
+            userId: data.userId,
+            userName: data.userName,
             emailId: data.emailId,
           });
         }
@@ -311,7 +322,7 @@ const SettingsPage = () => {
                   options={interfaceApiResponse}
                   placeholder="Choose an Interface..."
                   onChange={handleInterfaceChange}
-                  isLoading={loading}
+                  // isLoading={loading}
                   ref={typeaheadInterfaceRef}
                 />
               </Form.Group>
@@ -320,7 +331,7 @@ const SettingsPage = () => {
                 <div className="d-flex">
                   <Typeahead
                     id="userId"
-                    labelKey="username"
+                    labelKey="userName"
                     options={filteredUserOptions}
                     placeholder="Choose Users..."
                     onChange={handleUserSelection}

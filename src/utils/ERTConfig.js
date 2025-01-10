@@ -13,6 +13,7 @@ const ERT_API_URLS = {
   Purge_Errors_URL: `${API_BASE_URL}/api/Purge/Purge`,
   InterfaceList_URL: `${API_BASE_URL}/interface`,
   UsersList_URL: `${API_BASE_URL}/interfaceUser`,
+  NX_Users_URL: `${API_BASE_URL}/interfaceUser/users`,
   server_name: `192.168.1.33`,
 };
 
