@@ -148,8 +148,7 @@ const handleApiGetAction = async (
               errorMessage,
               retryGetActionCount,
               setLoading,
-              setApiResponse,
-              errorMessageWithoutStatus
+              setApiResponse
             ),
           1000
         ); // Retry after 1 second

@@ -34,12 +34,90 @@ const ChartsComponent = () => {
   const [barData, setBarData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const fixedColors = [
+    "#FF5733",
+    "#33FF57",
+    "#3357FF",
+    "#F1C40F",
+    "#9B59B6",
+    "#E74C3C",
+    "#16A085",
+    "#1ABC9C",
+    "#2ECC71",
+    "#3498DB",
+    "#F39C12",
+    "#D35400",
+    "#BDC3C7",
+    "#34495E",
+    "#7F8C8D",
+    "#2C3E50",
+    "#8E44AD",
+    "#2980B9",
+    "#27AE60",
+    "#F1C40F",
+    "#D35400",
+    "#9B59B6",
+    "#34495E",
+    "#F39C12",
+    "#E74C3C",
+    "#16A085",
+    "#1ABC9C",
+    "#9B59B6",
+    "#2ECC71",
+    "#3498DB",
+    "#F1C40F",
+    "#7F8C8D",
+    "#16A085",
+    "#F39C12",
+    "#E74C3C",
+    "#F1C40F",
+    "#2980B9",
+    "#9B59B6",
+    "#E74C3C",
+    "#FF5733",
+    "#33FF57",
+    "#7F8C8D",
+    "#8E44AD",
+    "#34495E",
+    "#1ABC9C",
+    "#2ECC71",
+    "#3498DB",
+    "#F1C40F",
+    "#D35400",
+    "#BDC3C7",
+    "#FF5733",
+    "#8E44AD",
+    "#9B59B6",
+  ];
+
   useEffect(() => {
     fetchPieChartData();
     fetchBarChartData();
   }, []);
-
-  // Function to fetch the data for Pie chart (for example, API call)
+  const dummyPieData = {
+    labels: ["Category 1", "Category 2", "Category 3", "Category 4"],
+    datasets: [
+      {
+        data: [20, 30, 25, 25],
+        backgroundColor: fixedColors.slice(0, 4),
+        borderColor: "#FFFFFF",
+        borderWidth: 2,
+        hoverOffset: 4,
+        datalabels: {
+          anchor: "end",
+          align: "end",
+          color: "#fff",
+          backgroundColor: function (context) {
+            return context.dataset.backgroundColor;
+          },
+          borderRadius: 4,
+          font: {
+            weight: "bold",
+          },
+        },
+      },
+    ],
+  };
   const fetchPieChartData = async () => {
     try {
       setLoading(true);
@@ -53,11 +131,11 @@ const ChartsComponent = () => {
         "Error in fetching errors"
       );
 
-      const categories = Object.keys(response); // Extract categories like 'irproductmsgtype', 'mfgOrder', etc.
-      const values = Object.values(response); // Extract corresponding values
+      const categories = Object.keys(response);
+      const values = Object.values(response);
 
-      // Generate a set of unique colors for each segment
-      const colors = generateColors(values.length);
+      // Cycle through fixed colors instead of generating random colors
+      const colors = fixedColors.slice(0, values.length); // Get a slice of the fixed colors
 
       const total = values.reduce((acc, value) => acc + value, 0);
 
@@ -93,21 +171,6 @@ const ChartsComponent = () => {
     }
   };
 
-  // Helper function to generate a set of colors dynamically
-  const generateColors = (num) => {
-    const colors = [];
-    for (let i = 0; i < num; i++) {
-      colors.push(generateRandomColor());
-    }
-    return colors;
-  };
-
-  // Helper function to generate a random color
-  const generateRandomColor = () => {
-    const randomColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
-    return randomColor;
-  };
-
   const fetchBarChartData = async () => {
     try {
       setLoading(true);
@@ -122,7 +185,6 @@ const ChartsComponent = () => {
       );
 
       if (Array.isArray(response)) {
-        // Create a month name mapping
         const monthNames = [
           "January",
           "February",
@@ -147,7 +209,7 @@ const ChartsComponent = () => {
           ...new Set(response.map((item) => item.interfaceName)),
         ];
 
-        const dataset = interfaceNames.map((interfaceName) => {
+        const dataset = interfaceNames.map((interfaceName, index) => {
           const data = months.map((month) => {
             const entry = response.find(
               (item) =>
@@ -156,16 +218,17 @@ const ChartsComponent = () => {
             return entry ? entry.totalCount : 0;
           });
 
-          const randomColor = generateRandomColor();
+          // Use the same fixed color array for bars
+          const color = fixedColors[index % fixedColors.length];
 
           return {
             label: interfaceName,
             data: data,
-            backgroundColor: randomColor,
+            backgroundColor: color,
             borderColor: "#FFFFFF",
             borderWidth: 2,
             datalabels: {
-              backgroundColor: randomColor,
+              backgroundColor: color,
               color: "#fff",
               borderRadius: 4,
               font: {

@@ -3,6 +3,7 @@ import ChartsComponent from "../dashboard/ChartComponent";
 import TableUtility from "../common/modified-datatable/TableUtility";
 import ErrorStatsCard from "../dashboard/ErrorStatsCard";
 import ApiMethods from "../../utils/ApiMethods";
+import { ToastContainer } from "react-toastify";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
 import { useUser } from "../common/UserProvider";
@@ -15,7 +16,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [errorCounts, setErrorCounts] = useState([]);
   const [recentErrors, setRecentErrors] = useState([]);
-
+  const [errorStats, setErrorStats] = useState({});
   // Grid columns for the table
   const gridColumns = [
     { Header: "Error ID", accessor: "errorId", show: false },
@@ -34,14 +35,6 @@ const Dashboard = () => {
     { Header: "Sequencer Error", accessor: "sequencerError" },
   ];
 
-  // State to store error stats fetched from the API
-  const [errorStats, setErrorStats] = useState({
-    openCount: 0,
-    reprocessedCount: 0,
-    closedCount: 0,
-    totalCount: 0,
-  });
-
   // Fetch data from API when component mounts
   useEffect(() => {
     fetchRecentErrors();
@@ -59,21 +52,27 @@ const Dashboard = () => {
         setErrorCounts,
         "Error in fetching servers"
       );
-
-      if (response && response.errorCounts && response.errorCounts.length > 0) {
-        const errorData = response.errorCounts[0];
-
+      if (response) {
+        const stats = {
+          openCount: response.openCount || 0,
+          reprocessedCount: response.reprocessedCount || 0,
+          closedCount: response.closedCount || 0,
+          totalCount: response.totalCount || 0,
+        };
+        setErrorStats(stats);
+      } else {
         setErrorStats({
-          openCount: errorData.openCount || 0,
-          reprocessedCount: errorData.reprocessedCount || 0,
-          closedCount: errorData.closedCount || 0,
-          totalCount: errorData.totalCount || 0,
+          openCount: 0,
+          reprocessedCount: 0,
+          closedCount: 0,
+          totalCount: 0,
         });
       }
     } catch (error) {
       ErrorLogger(error);
     }
   };
+
   const fetchRecentErrors = async () => {
     try {
       let URL = `${ERT_API_URLS.Recent_Errors_URL}?ServerName=${userDetails.serverName}`;
@@ -82,8 +81,7 @@ const Dashboard = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setRecentErrors,
-        "Error in fetching errors"
+        setRecentErrors
       );
       console.log(response);
     } catch (error) {
@@ -98,6 +96,7 @@ const Dashboard = () => {
 
   return (
     <div>
+      <ToastContainer />
       <div
         className="ms-4"
         style={{

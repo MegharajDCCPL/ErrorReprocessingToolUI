@@ -43,6 +43,7 @@ const LaunchComponent = () => {
       const messageHandler = (event) => {
         if (event.origin.toLowerCase() !== Nexus_UI_URL.toLowerCase()) return;
         let recivedAppId = event.data.selectedAppId;
+        console.log("recivedAppId", recivedAppId);
         setSelectedApp(event.data.selectedAppId);
         setLoggedInDetails(event.data.loggedInAllDetails);
         fetchData(recivedAppId);

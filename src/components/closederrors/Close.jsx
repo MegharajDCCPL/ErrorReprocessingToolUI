@@ -59,14 +59,16 @@ const Close = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
+      const generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
+      // If any filters are applied, modify the URL to include the filters
       if (isFilteredBtnClicked) {
-        generateUrl = constructFilterURL(generateUrl);
+        handleFilteredData(constructFilterURL(generateUrl));
+      } else {
+        handleFilteredData(generateUrl);
       }
-      handleFilteredData(generateUrl);
     }
-  }, [dataRangeDrop]);
+  }, [dataRangeDrop, isFilteredBtnClicked]);
 
   // Handle filtered data response
   useEffect(() => {
@@ -86,12 +88,12 @@ const Close = () => {
   }, [filteredDataApiRes]);
 
   // Handle filtered data count
-  useEffect(() => {
-    if (dataRangeDrop !== "") {
-      const [start, end] = dataRangeDrop.split("-");
-      handleFilteredDataCount(start, end);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (dataRangeDrop !== "") {
+  //     const [start, end] = dataRangeDrop.split("-");
+  //     handleFilteredDataCount(start, end);
+  //   }
+  // }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -314,6 +316,22 @@ const Close = () => {
   };
 
   // Handle filtered data based on URL
+  // const handleFilteredData = async (url) => {
+  //   try {
+  //     const response = await ApiMethods.handleApiGetAction(
+  //       url,
+  //       "Records doesn't exist.",
+  //       0,
+  //       setLoading,
+  //       setInitialFilteredData
+  //     );
+  //     setAllDataCount(response?.totalRecords || "0");
+  //     console.log(response);
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
+
   const handleFilteredData = async (url) => {
     try {
       const response = await ApiMethods.handleApiGetAction(
@@ -321,29 +339,31 @@ const Close = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setInitialFilteredData
+        (apiResponse) => {
+          setAllDataCount(apiResponse.totalRecords || "0");
+          setFilteredData(apiResponse.closedErrors || []);
+        }
       );
-      setAllDataCount(response?.totalRecords || "0");
-      console.log(response);
     } catch (error) {
       ErrorLogger(error);
     }
   };
+
   // Handle filtered data count
-  const handleFilteredDataCount = async (startRow, endRow) => {
-    try {
-      const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
-        "Records doesn't exist.",
-        0,
-        setLoading,
-        setAllDataCount
-      );
-      setAllDataCount(apiResponse?.totalRecords || "0");
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
+  // const handleFilteredDataCount = async (startRow, endRow) => {
+  //   try {
+  //     const apiResponse = await ApiMethods.handleApiGetAction(
+  //       `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
+  //       "Records doesn't exist.",
+  //       0,
+  //       setLoading,
+  //       setAllDataCount
+  //     );
+  //     setAllDataCount(apiResponse?.totalRecords || "0");
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
 
   const formatDate = (date) => {
     const pad = (num, size) => {
