@@ -30,7 +30,7 @@ const handleApiPostAction = async (
         "Content-Type": "application/json",
         UUID: uuid,
       },
-      // withCredentials: true,
+      withCredentials: true,
     });
 
     if (Object.keys(postResponse.data).length != 1)
@@ -122,8 +122,7 @@ const handleApiGetAction = async (
   setStatusCode
 ) => {
   try {
-    const response = await axios.get(url);
-    //, { withCredentials: true });
+    const response = await axios.get(url, { withCredentials: true });
     if (response.status === 200) {
       setApiResponse(response.data);
 
@@ -362,7 +361,7 @@ const handleApiPatchAction = async (
       await schema.validate(formData, { abortEarly: false });
     }
     const patchResponse = await axios.patch(apiUrl, patchData, {
-      // withCredentials: true,
+      withCredentials: true,
     });
     if (patchResponse.status === 200) {
       // Reset error state for all fields
