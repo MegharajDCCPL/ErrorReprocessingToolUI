@@ -12,10 +12,10 @@ import { v4 as uuidv4 } from "uuid";
 import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
 
-const Close = () => {
+const ReOpen = () => {
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
-    setSelectedComponentName("close");
+    setSelectedComponentName("reopenerrors");
   }, []);
   const [formData, setFormData] = useState({
     MessageId: "",
@@ -659,4 +659,4 @@ const Close = () => {
   );
 };
 
-export default Close;
+export default ReOpen;

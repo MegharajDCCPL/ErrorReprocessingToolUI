@@ -118,15 +118,21 @@ const handleApiGetAction = async (
   errorMessage,
   retryGetActionCount,
   setLoading,
-  setApiResponse
+  setApiResponse,
+  setStatusCode
 ) => {
   try {
     const response = await axios.get(url);
     //, { withCredentials: true });
+    if (response.status === 200) {
+      setApiResponse(response.data);
 
-    setLoading(false);
-    retryGetActionCount = 0;
-    setApiResponse(response.data);
+      setLoading(false);
+      if (setStatusCode) {
+        setStatusCode(200);
+      }
+      retryGetActionCount = 0;
+    }
     return response.data;
   } catch (error) {
     ErrorLogger(error);

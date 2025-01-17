@@ -49,8 +49,7 @@ const Dashboard = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setErrorCounts,
-        "Error in fetching servers"
+        setErrorCounts
       );
       if (response) {
         const stats = {

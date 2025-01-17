@@ -19,6 +19,7 @@ const ERT_API_URLS = {
   Bar_Chart_URL: `${API_BASE_URL}/api/ErrorProcessCount/GetErrorHistory`,
   SubAppAccess_URL: `${API_BASE_URL}/api/SubAppsAccess/sub-apps-access`,
   Retention_Days_URL: `${API_BASE_URL}/api/Settings/`,
+  AppModule_URL: `${API_BASE_URL}/module`,
 };
 
 export default ERT_API_URLS;

@@ -15,7 +15,7 @@ import { useUser } from "../common/UserProvider";
 const Reprocess = () => {
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
-    setSelectedComponentName("reprocess");
+    setSelectedComponentName("reprocesserrors");
   }, []);
   const [formData, setFormData] = useState({
     MessageId: "",

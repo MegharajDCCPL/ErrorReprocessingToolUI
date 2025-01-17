@@ -127,8 +127,7 @@ const ChartsComponent = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setPieData,
-        "Error in fetching errors"
+        setPieData
       );
 
       const categories = Object.keys(response);
@@ -180,8 +179,7 @@ const ChartsComponent = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setBarData,
-        "Error in fetching errors"
+        setBarData
       );
 
       if (Array.isArray(response)) {

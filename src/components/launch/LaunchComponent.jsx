@@ -36,7 +36,7 @@ const LaunchComponent = () => {
   const [statusCode, setStatusCode] = useState(null);
   const navigate = useNavigate();
   let retryCount = 0;
-  // const [appModules, setAppModules] = useState([]);
+  const [appModules, setAppModules] = useState([]);
 
   useEffect(() => {
     try {
@@ -187,7 +187,7 @@ const LaunchComponent = () => {
       utcOffset: selectedServer.utcOffset,
     };
     setUserDetails(payload);
-    navigate("/homepage/dashboard");
+
     try {
       const response = await ApiMethods.handleApiPostAction(
         "",
@@ -209,10 +209,8 @@ const LaunchComponent = () => {
           "Error fetching redirect URL data.",
           retryCount,
           setLoading,
-          setApiResponse,
-          "An error occurred while processing your request."
+          setApiResponse
         );
-
         if (res && res.redirectUrl) {
           await ApiMethods.handleApiGetAction(
             res.redirectUrl,
@@ -220,12 +218,10 @@ const LaunchComponent = () => {
             retryCount,
             setLoading,
             setApiResponse,
-            "An error occurred while processing your request.",
             setStatusCode
           );
         }
       }
-
       const message = {
         type: "Header",
         data: selectedServer.serverName,
@@ -237,53 +233,45 @@ const LaunchComponent = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (statusCode === 200) {
-  //     handleRedirect();
-  //   }
-  // }, [statusCode]);
+  useEffect(() => {
+    if (statusCode === 200) {
+      handleRedirect();
+    }
+  }, [statusCode]);
 
-  // const handleRedirect = async () => {
-  //   //calling Get method
-  //   const moduleRes = await ApiMethods.handleApiGetAction(
-  //     `${ERT_API_URLS.AppModule_URL}`,
-  //     "Records doesn't exist.",
-  //     retryCount,
-  //     setLoading,
-  //     setAppModules,
-  //     "Error in fetching app modules."
-  //   );
+  const handleRedirect = async () => {
+    //calling Get method
+    const moduleRes = await ApiMethods.handleApiGetAction(
+      `${ERT_API_URLS.AppModule_URL}`,
+      "Error in fetching app modules.",
+      retryCount,
+      setLoading,
+      setAppModules
+    );
 
-  //   if (moduleRes !== null && moduleRes.length > 0) {
-  //     // Need to mantain this default menu-name to avoid mis-match
-  //     let defaultMenuName = moduleRes[0];
-  //     if (moduleRes.includes("Dashboard")) {
-  //       defaultMenuName = "Dashboard";
-  //     } else if (moduleRes.includes("Export")) {
-  //       defaultMenuName = "Export";
-  //     } else if (moduleRes.includes("Import")) {
-  //       defaultMenuName = "Import";
-  //     } else if (moduleRes.includes("Data References")) {
-  //       defaultMenuName = "Data References";
-  //     } else if (moduleRes.includes("Objects Library")) {
-  //       defaultMenuName = "Objects Library";
-  //     } else if (moduleRes.includes("Fields Library")) {
-  //       defaultMenuName = "Fields Library";
-  //     } else if (moduleRes.includes("Objects Permission")) {
-  //       defaultMenuName = "Objects Permission";
-  //     } else if (moduleRes.includes("Objects Permission")) {
-  //       defaultMenuName = "Objects Permission";
-  //     } else if (moduleRes.includes("Audit Trail Complete")) {
-  //       defaultMenuName = "Audit Trail Complete";
-  //     }
-
-  //     navigate(
-  //       `/homepage/${defaultMenuName.toLowerCase().replace(/\s+/g, "-").trim()}`
-  //     );
-  //   } else {
-  //     navigate("/homepage");
-  //   }
-  // };
+    if (moduleRes !== null && moduleRes.length > 0) {
+      // Need to mantain this default menu-name to avoid mis-match
+      let defaultMenuName = moduleRes[0];
+      if (moduleRes.includes("Dashboard")) {
+        defaultMenuName = "dashboard";
+      } else if (moduleRes.includes("ReProcess Errors")) {
+        defaultMenuName = "reprocess";
+      } else if (moduleRes.includes("ReOpen Errors")) {
+        defaultMenuName = "close";
+      } else if (moduleRes.includes("Archive Errors")) {
+        defaultMenuName = "archive";
+      } else if (moduleRes.includes("Purge Errors")) {
+        defaultMenuName = "purge";
+      } else if (moduleRes.includes("Settings")) {
+        defaultMenuName = "settings";
+      }
+      navigate(
+        `/homepage/${defaultMenuName.toLowerCase().replace(/\s+/g, "-").trim()}`
+      );
+    } else {
+      navigate("/homepage/dashboard");
+    }
+  };
 
   return (
     <>

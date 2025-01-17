@@ -27,23 +27,25 @@ const SideNavbar = () => {
         </li>
         <li
           className={`${
-            selectedComponentName === "reprocess"
+            selectedComponentName === "reprocesserrors"
               ? `${styles["active-link"]}`
               : ""
           } `}
-          onClick={() => handleNavLinkClick("reprocess")}
+          onClick={() => handleNavLinkClick("reprocesserrors")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/reprocess">ReProcess Errors</NavLink>
+          <NavLink to="/reprocesserrors">ReProcess Errors</NavLink>
         </li>
         <li
           className={`${
-            selectedComponentName === "close" ? `${styles["active-link"]}` : ""
+            selectedComponentName === "reopenerrors"
+              ? `${styles["active-link"]}`
+              : ""
           } `}
-          onClick={() => handleNavLinkClick("close")}
+          onClick={() => handleNavLinkClick("reopenerrors")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="/close">ReOpen Errors</NavLink>
+          <NavLink to="/reopenerrors">ReOpen Errors</NavLink>
         </li>
         <li
           className={`${
