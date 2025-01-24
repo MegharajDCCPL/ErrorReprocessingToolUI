@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import TableUtility from "../common/modified-datatable/TableUtility";
 import EditableCell from "../common/modified-datatable/EditableCell";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { toast, ToastContainer } from "react-toastify";
 import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
@@ -14,10 +13,10 @@ import { v4 as uuidv4 } from "uuid";
 import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
 
-const Archive = () => {
+const ActionReport = () => {
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
-    setSelectedComponentName("archive");
+    setSelectedComponentName("actionreport");
   }, []);
   const [formData, setFormData] = useState({
     MessageId: "",
@@ -30,6 +29,7 @@ const Archive = () => {
     AdapterName: "",
     OriginalMessageContent: "",
   });
+  const [actionEnable, setActionEnable] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isFilteredBtnClicked, setIsFilteredBtnClicked] = useState(false);
   const [initialFilteredData, setInitialFilteredData] = useState([]);
@@ -49,69 +49,11 @@ const Archive = () => {
     { label: "Inbound" },
     { label: "Outbound" },
   ]);
-  const [errorTypeOptions, setErrorTypeOptions] = useState([
-    {
-      label: "Reprocessed",
-    },
-    {
-      label: "Closed",
-    },
+
+  const [actions, setActions] = useState([
+    { label: "Ready To Reprocess" },
+    { label: "Ready To Close" },
   ]);
-
-  const [isArchiveAuto, setIsArchiveAuto] = useState(false);
-  const [archiveText, setArchiveText] = useState("");
-
-  useEffect(() => {
-    fetchRetentionDays();
-  }, []);
-  const fetchRetentionDays = async () => {
-    try {
-      let url = `${ERT_API_URLS.Retention_Days_URL}GetAutoArchiveRetentionDays?ServerName=${userDetails.serverName}`;
-
-      // Call the API and wait for the response
-      const response = await ApiMethods.handleApiGetAction(
-        url,
-        "Records doesn't exist.",
-        0,
-        setLoading,
-        setArchiveText
-      );
-      if (response != null) {
-        setIsArchiveAuto(true);
-        setLoading(true);
-      } else {
-        setIsArchiveAuto(false);
-      }
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
-  const handleAutoArchive = async () => {
-    try {
-      if (archiveText !== "") {
-        await ApiMethods.handleApiPostAction(
-          "",
-          "",
-          `${ERT_API_URLS.Retention_Days_URL}UpdateRetentionDays?serverName=${userDetails.serverName}&settingType=AutoArchive&durationData=${archiveText}`,
-          "",
-          "Error in Purging Error",
-          "",
-          setLoading,
-          handleRefreshPage,
-          0,
-          "",
-          uuid,
-          setUuid
-        );
-        // Optionally, you can also update other states or show a success message
-        console.log("Retention days updated successfully");
-      } else {
-        console.log("Archive text is empty. Nothing to update.");
-      }
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
 
   // Generate ranges based on all data count
   useEffect(() => {
@@ -124,24 +66,24 @@ const Archive = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      let generateUrl = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
+      const generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
+      // If any filters are applied, modify the URL to include the filters
       if (isFilteredBtnClicked) {
-        generateUrl = constructFilterURL(generateUrl);
+        handleFilteredData(constructFilterURL(generateUrl));
+      } else {
+        handleFilteredData(generateUrl);
       }
-      handleFilteredData(generateUrl);
     }
-  }, [dataRangeDrop]);
+  }, [dataRangeDrop, isFilteredBtnClicked]);
 
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      const updatedData = initialFilteredData["closedAndReprocessedErrors"].map(
-        (row) => ({
-          ...row,
-          isChecked: false,
-        })
-      );
+      const updatedData = initialFilteredData["closedErrors"].map((row) => ({
+        ...row,
+        isChecked: false,
+      }));
       setFilteredData(updatedData);
     }
   }, [initialFilteredData]);
@@ -149,9 +91,7 @@ const Archive = () => {
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        const updatedData = filteredDataApiRes[
-          "closedAndReprocessedErrors"
-        ].map((row) => ({
+        const updatedData = filteredDataApiRes["closedErrors"].map((row) => ({
           ...row,
           isChecked: false,
         }));
@@ -163,12 +103,12 @@ const Archive = () => {
   }, [filteredDataApiRes]);
 
   // Handle filtered data count
-  useEffect(() => {
-    if (dataRangeDrop !== "") {
-      const [start, end] = dataRangeDrop.split("-");
-      handleFilteredDataCount(start, end);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (dataRangeDrop !== "") {
+  //     const [start, end] = dataRangeDrop.split("-");
+  //     handleFilteredDataCount(start, end);
+  //   }
+  // }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -178,30 +118,10 @@ const Archive = () => {
     }));
   };
 
-  const handleCheckboxChange = (row) => {
-    setFilteredData((prevData) => {
-      const updatedData = prevData.map((dataRow) =>
-        dataRow.errorId === row.errorId
-          ? { ...dataRow, isChecked: !dataRow.isChecked }
-          : dataRow
-      );
-      const allChecked = updatedData.every((dataRow) => dataRow.isChecked);
-      setSelectAllErrors(allChecked);
-      return updatedData;
-    });
-  };
-
-  const handleSelectAllChange = () => {
-    setSelectAllErrors(!selectAllErrors);
-    setFilteredData((prevData) => {
-      return prevData.map((dataRow) => ({
-        ...dataRow,
-        isChecked: !selectAllErrors,
-      }));
-    });
-  };
-
   const handleDropdownChange = async (selected, fieldName) => {
+    if (fieldName === "Action") {
+      setActionEnable(true);
+    }
     setFormData((prevData) => ({
       ...prevData,
       [fieldName]: selected.length > 0 ? selected[0].label : "",
@@ -209,46 +129,79 @@ const Archive = () => {
   };
 
   // Handle closing selected errors
-  const handleArchive = async () => {
+  // const handleActionError = async () => {
+  //   if (selectedErrors.length === 0) {
+  //     toast.info("No errors selected for Action.");
+  //     return;
+  //   }
+
+  //   const payload = {
+  //     serverName: userDetails.serverName,
+  //     errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+  //   };
+
+  //   try {
+  //     await ApiMethods.handleApiPostAction(
+  //       "",
+  //       "",
+  //       ERT_API_URLS.Open_Closed_Errors_URL,
+  //       "",
+  //       "Error in taking Action",
+  //       "",
+  //       setLoading,
+  //       handleRefreshPage,
+  //       0, // Retry count
+  //       payload,
+  //       uuid,
+  //       setUuid
+  //     );
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
+
+  const handleActionError = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
+    console.log("selectedErrors", selectedErrors);
     if (selectedErrors.length === 0) {
-      toast.info("No errors selected for closing.");
+      toast.info("No errors selected for Action.");
       return;
     }
 
     const payload = {
       serverName: userDetails.serverName,
-      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+      errorIds: selectedErrors.map((row) => parseInt(row.errorId, 10)),
+      comments: selectedErrors.map((row) => row.mesObject),
     };
-
+    console.log("payload", payload);
     try {
-      await ApiMethods.handleApiPostAction(
-        "",
-        "",
-        ERT_API_URLS.Archive_Errors_URL,
-        "",
-        "Error in Purging Error",
-        "",
-        setLoading,
-        handleRefreshPage,
-        0, // Retry count
-        payload,
-        uuid,
-        setUuid
-      );
+      // await ApiMethods.handleApiPostAction(
+      //   "",
+      //   "",
+      //   ERT_API_URLS.Open_Closed_Errors_URL,
+      //   "",
+      //   "Error in taking Action",
+      //   "",
+      //   setLoading,
+      //   handleRefreshPage,
+      //   0, // Retry count
+      //   payload,
+      //   uuid,
+      //   setUuid
+      // );
     } catch (error) {
       ErrorLogger(error);
     }
   };
 
   // Handle success after closing errors, fetch updated records
-  const handleRefreshPage = async () => {
-    await handleFilteredData(
-      constructFilterURL(
-        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`
-      )
-    );
-  };
+  // const handleRefreshPage = async () => {
+  //   await handleFilteredData(
+  //     constructFilterURL(
+  //       `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`
+  //     )
+  //   );
+  // };
 
   const handleReset = async () => {
     // Reset form data
@@ -276,13 +229,12 @@ const Archive = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`;
+    const initialURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
     setDataRangeDrop("1-10000"); // Reset data range drop-down if applicable
   };
-
   // Construct filter URL with form data and date range
   const constructFilterURL = (url) => {
     let filterURL = url;
@@ -301,6 +253,31 @@ const Archive = () => {
 
     return filterURL;
   };
+
+  const handleCheckboxChange = (row) => {
+    setFilteredData((prevData) => {
+      const updatedData = prevData.map((dataRow) =>
+        dataRow.errorId === row.errorId
+          ? { ...dataRow, isChecked: !dataRow.isChecked }
+          : dataRow
+      );
+      const allChecked = updatedData.every((dataRow) => dataRow.isChecked);
+      setSelectAllErrors(allChecked);
+      return updatedData;
+    });
+  };
+
+  const handleSelectAllChange = () => {
+    setSelectAllErrors(!selectAllErrors);
+    setFilteredData((prevData) => {
+      return prevData.map((dataRow) => ({
+        ...dataRow,
+        isChecked: !selectAllErrors,
+      }));
+    });
+  };
+
+  console.log("Errors", filteredData);
 
   // Grid columns with checkboxes
   const gridColumns = [
@@ -321,7 +298,12 @@ const Archive = () => {
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
-    { Header: "MES Object", accessor: "mesObject" },
+    //{ Header: "MES Object", accessor: "mesObject" },
+    {
+      Header: "MES Object",
+      accessor: "mesObject",
+      Cell: (props) => <EditableCell {...props} type="text" />,
+    },
     { Header: "MES Object Value", accessor: "mesObjectValue" },
     { Header: "Interface Type", accessor: "interfaceType" },
     { Header: "Error", accessor: "error" },
@@ -330,7 +312,6 @@ const Archive = () => {
     { Header: "Response", accessor: "response" },
     { Header: "Original Message Content", accessor: "originalMessageContent" },
     { Header: "Request", accessor: "request" },
-    { Header: "Sequencer Error", accessor: "sequencerError" },
   ];
 
   const handleFilter = async () => {
@@ -345,7 +326,7 @@ const Archive = () => {
         toast.info("No data to filter");
         return;
       }
-      let FilterURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`;
+      let FilterURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=192.168.1.33`;
 
       // Append form data to URL
       Object.keys(formData).forEach((key) => {
@@ -370,7 +351,7 @@ const Archive = () => {
       );
       if (apiResponse !== null) {
         setAllDataCount(apiResponse["totalRecords"]);
-        setFilteredData(apiResponse["closedAndReprocessedErrors"]);
+        setFilteredData(apiResponse["closedErrors"]);
       } else {
         setAllDataCount("0");
         setFilteredData([]);
@@ -381,6 +362,22 @@ const Archive = () => {
   };
 
   // Handle filtered data based on URL
+  // const handleFilteredData = async (url) => {
+  //   try {
+  //     const response = await ApiMethods.handleApiGetAction(
+  //       url,
+  //       "Records doesn't exist.",
+  //       0,
+  //       setLoading,
+  //       setInitialFilteredData
+  //     );
+  //     setAllDataCount(response?.totalRecords || "0");
+  //     console.log(response);
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
+
   const handleFilteredData = async (url) => {
     try {
       const response = await ApiMethods.handleApiGetAction(
@@ -388,29 +385,31 @@ const Archive = () => {
         "Records doesn't exist.",
         0,
         setLoading,
-        setInitialFilteredData
+        (apiResponse) => {
+          setAllDataCount(apiResponse.totalRecords || "0");
+          setFilteredData(apiResponse.closedErrors || []);
+        }
       );
-      setAllDataCount(response?.totalRecords || "0");
     } catch (error) {
       ErrorLogger(error);
     }
   };
 
   // Handle filtered data count
-  const handleFilteredDataCount = async (startRow, endRow) => {
-    try {
-      const apiResponse = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
-        "Records doesn't exist.",
-        0,
-        setLoading,
-        setAllDataCount
-      );
-      setAllDataCount(apiResponse?.totalRecords || "0");
-    } catch (error) {
-      ErrorLogger(error);
-    }
-  };
+  // const handleFilteredDataCount = async (startRow, endRow) => {
+  //   try {
+  //     const apiResponse = await ApiMethods.handleApiGetAction(
+  //       `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${startRow}&endValue=${endRow}`,
+  //       "Records doesn't exist.",
+  //       0,
+  //       setLoading,
+  //       setAllDataCount
+  //     );
+  //     setAllDataCount(apiResponse?.totalRecords || "0");
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
 
   const formatDate = (date) => {
     const pad = (num, size) => {
@@ -458,18 +457,19 @@ const Archive = () => {
   };
 
   return (
-    <div>
+    <div className="">
       <ToastContainer />
       <div className="d-flex flex-row flex-wrap align-items-center mt-2 mb-4 gap-3">
-        <label className="module-header" style={{ fontSize: "18px" }}>
-          Processed Error Count : {allDataCount ? allDataCount : ""}
-        </label>
-
-        {/* Filtered Data Range */}
+        <div>
+          <label className="module-header" style={{ fontSize: "18px" }}>
+            Total Error Count : {allDataCount ? allDataCount : ""}
+          </label>
+        </div>
         <div className="d-flex align-items-center">
           <label className="me-2" style={{ marginTop: "0.375rem" }}>
             Filtered Data Range
           </label>
+
           <Typeahead
             id="instance-range-typeahead"
             className="me-2"
@@ -480,11 +480,10 @@ const Archive = () => {
             placeholder="Set range..."
             onChange={handleFilterRangeDrop}
             filterBy={() => true} // Disable filtering
-            inputProps={{ readOnly: true }}
+            inputProps={{ readOnly: true }} // Make input field read-only
           />
         </div>
 
-        {/* Filter Button */}
         <OverlayTrigger
           placement="right"
           overlay={<Tooltip id="filter-tooltip">Apply Filter</Tooltip>}
@@ -497,37 +496,31 @@ const Archive = () => {
             <FaFilter />
           </Button>
         </OverlayTrigger>
-
-        {/* Enable Auto Archive Switch */}
-        <Form.Group controlId="archiveAutoSwitch">
-          <Form.Check
-            type="switch"
-            id="archiveAutoSwitch"
-            label="Auto Archive"
-            checked={isArchiveAuto}
-            onChange={() => setIsArchiveAuto(!isArchiveAuto)}
+        <div className="d-flex align-items-center gap-2 ms-auto dropup">
+          <label className="me-2">Actions</label>
+          <Typeahead
+            id="Actions"
+            labelKey="label"
+            options={actions}
+            filterBy={() => true}
+            inputProps={{ readOnly: true }}
+            selected={formData.Action ? [{ label: formData.Action }] : []}
+            onChange={(selected) => handleDropdownChange(selected, "Action")}
+            placeholder="Choose an Action..."
           />
-        </Form.Group>
-        {/* Archive Details Section */}
-        {isArchiveAuto && (
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <Form.Control
-              type="text"
-              placeholder="Enter Retention Days"
-              value={archiveText}
-              style={{ width: "8.7rem" }}
-              onChange={(e) => setArchiveText(e.target.value)}
-            />
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={async () => handleAutoArchive()}
-            >
-              Archive
-            </Button>
-          </div>
-        )}
+
+          <Button
+            id="close-errors-btn"
+            variant="outline-secondary"
+            size="sm"
+            onClick={handleActionError}
+            disabled={!actionEnable}
+          >
+            Action
+          </Button>
+        </div>
       </div>
+
       <div className="d-flex gap-3">
         {showFilters && (
           <div
@@ -599,6 +592,7 @@ const Archive = () => {
                       onChange={handleInputChange}
                     />
                   </Form.Group>
+
                   <Form.Group controlId="AdapterName">
                     <Form.Label>Adapter Name</Form.Label>
                     <Form.Control
@@ -612,8 +606,8 @@ const Archive = () => {
                   <Form.Group controlId="MessageType">
                     <Form.Label>Message Type</Form.Label>
                     <Form.Control
-                      name="MessageType"
                       type="text"
+                      name="MessageType"
                       value={formData.MessageType}
                       onChange={handleInputChange}
                     />
@@ -636,25 +630,6 @@ const Archive = () => {
                         handleDropdownChange(selected, "InterfaceType")
                       }
                       placeholder="Choose an Interface Type..."
-                    />
-                  </Form.Group>
-                  <Form.Group controlId="ErrorType">
-                    <Form.Label>Error Type</Form.Label>
-                    <Typeahead
-                      id="ErrorType"
-                      labelKey="label"
-                      options={errorTypeOptions}
-                      filterBy={() => true}
-                      inputProps={{ readOnly: true }}
-                      selected={
-                        formData.ErrorType
-                          ? [{ label: formData.ErrorType }]
-                          : []
-                      }
-                      onChange={(selected) =>
-                        handleDropdownChange(selected, "ErrorType")
-                      }
-                      placeholder="Choose an Error Type..."
                     />
                   </Form.Group>
 
@@ -706,7 +681,7 @@ const Archive = () => {
                 </div>
               </Form>
             </div>
-            <div className="d-flex justify-content-end gap-3 me-3 mb-2 position-sticky bottom-0 p-2">
+            <div className="d-flex justify-content-end gap-3 me-3 mb-2  position-sticky bottom-0 p-2">
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -741,20 +716,18 @@ const Archive = () => {
           />
         </div>
       </div>
-
-      <div className="d-flex justify-content-end mt-2 gap-3 pt-2 ms-3 me-3 border-top border-subtle">
+      {/* <div className="d-flex justify-content-end mt-2 gap-3 pt-2 ms-3 me-4 border-top border-subtle">
         <Button
           id="close-errors-btn"
-          variant="outline-primary"
+          variant="outline-secondary"
           size="sm"
-          onClick={handleArchive}
-          disabled={isArchiveAuto}
+          onClick={handleActionError}
         >
-          Archive
+          Action
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 };
 
-export default Archive;
+export default ActionReport;

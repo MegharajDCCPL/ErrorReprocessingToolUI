@@ -8,6 +8,7 @@ import ReOpenErrorsPage from "./pages/reopenerrors/ReOpenErrorsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import PurgePage from "./pages/purge/PurgePage";
 import LaunchPage from "./pages/launch/LaunchPage";
+import ActionReportPage from "./pages/actionreport/ActionReportPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<LaunchPage />} />
         <Route path="/homepage" element={<HomePage />}>
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="actionreport" element={<ActionReportPage />} />
           <Route path="reprocesserrors" element={<ReprocessPage />} />
           <Route path="archive" element={<ArchivePage />} />
           <Route path="reopenerrors" element={<ReOpenErrorsPage />} />

@@ -13,6 +13,7 @@ import RowModal from "./RowModal";
 import XMLModal from "./XMLModal"; // Add the new XMLModal import
 
 const TableUtility = (props) => {
+  const { StatusColumnName } = props;
   const [modalShow, setModalShow] = useState(false);
   const [xmlModalShow, setXmlModalShow] = useState(false); // State for the XML modal
   const [selectedRowData, setSelectedRowData] = useState(null);
@@ -192,11 +193,25 @@ const TableUtility = (props) => {
             <tbody {...getTableBodyProps()}>
               {page.map((row, i) => {
                 prepareRow(row);
+
                 const { key, ...restRowProps } = row.getRowProps();
+
+                const statusCell = row.cells.find(
+                  (cell) => cell.column.id === StatusColumnName
+                );
+                const statusValue = statusCell ? statusCell.value : null;
+
+                const rowStyle =
+                  statusValue === 9
+                    ? { backgroundColor: "#ffcccc" }
+                    : statusValue === 13
+                    ? { backgroundColor: "#ffff99" }
+                    : {};
                 return (
                   <tr
                     key={key}
                     {...restRowProps}
+                    style={rowStyle}
                     onDoubleClick={() => handleRowDoubleClick(row)}
                   >
                     {row.cells.map((cell, index) => {

@@ -14,6 +14,7 @@ const SideNavbar = () => {
   return (
     <div className={`${styles["side-navbar"]} ps-2 `}>
       <ul>
+        <label className={`${styles["label"]}`}>Dashboard</label>
         <li
           className={`${
             selectedComponentName === "dashboard"
@@ -23,8 +24,20 @@ const SideNavbar = () => {
           onClick={() => handleNavLinkClick("dashboard")}
         >
           <img className={`${styles["icon"]}`} src={""} />
-          <NavLink to="dashboard">Dashboard</NavLink>
+          <NavLink to="dashboard">Graphs</NavLink>
         </li>
+        <li
+          className={`${
+            selectedComponentName === "actionreport"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
+          onClick={() => handleNavLinkClick("actionreport")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/actionreport">Actionable Report</NavLink>
+        </li>
+        <label className={`${styles["label"]}`}>Actions</label>
         <li
           className={`${
             selectedComponentName === "reprocesserrors"
