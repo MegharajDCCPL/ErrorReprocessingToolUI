@@ -67,7 +67,32 @@ const SideNavbar = () => {
           <img className={`${styles["icon"]}`} src={""} />
           <NavLink to="/purge">Purge </NavLink>
         </li>
+        <label className={`${styles["label"]}`}>General Configuration</label>
+
         <li
+          className={`${
+            selectedComponentName === "InterfaceManagement"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
+          onClick={() => handleNavLinkClick("InterfaceManagement")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/InterfaceManagement">Interface</NavLink>
+        </li>
+        <li
+          className={`${
+            selectedComponentName === "InterfaceGroupManagement"
+              ? `${styles["active-link"]}`
+              : ""
+          } `}
+          onClick={() => handleNavLinkClick("InterfaceGroupManagement")}
+        >
+          <img className={`${styles["icon"]}`} src={""} />
+          <NavLink to="/InterfaceGroupManagement">Interface Group</NavLink>
+        </li>
+
+        {/* <li
           className={`${
             selectedComponentName === "settings"
               ? `${styles["active-link"]}`
@@ -77,7 +102,7 @@ const SideNavbar = () => {
         >
           <img className={`${styles["icon"]}`} src={""} />
           <NavLink to="/settings">Settings</NavLink>
-        </li>
+        </li> */}
       </ul>
     </div>
   );

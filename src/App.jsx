@@ -5,9 +5,10 @@ import DashboardPage from "./pages/dashboard/DashBoardPage";
 import ReprocessPage from "./pages/reprocess/ReprocessPage";
 import ArchivePage from "./pages/archive/ArchivePage";
 import ReOpenErrorsPage from "./pages/reopenerrors/ReOpenErrorsPage";
-import SettingsPage from "./pages/settings/SettingsPage";
+import InterfaceGroupManagement from "./pages/General Configuration/InterfaceGroupManagement";
 import PurgePage from "./pages/purge/PurgePage";
 import LaunchPage from "./pages/launch/LaunchPage";
+import InterfaceManagement from "./pages/General Configuration/InterfaceManagement";
 
 function App() {
   return (
@@ -20,7 +21,11 @@ function App() {
           <Route path="archive" element={<ArchivePage />} />
           <Route path="reopenerrors" element={<ReOpenErrorsPage />} />
           <Route path="purge" element={<PurgePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route
+            path="InterfaceGroupManagement"
+            element={<InterfaceGroupManagement />}
+          />
+          <Route path="InterfaceManagement" element={<InterfaceManagement />} />
         </Route>
       </Routes>
     </Router>

@@ -368,8 +368,9 @@ const handleApiPatchAction = async (
       if (setErrors !== null) {
         setErrors({});
       }
+      if (successMessage) toast.success(successMessage);
+      else showToast(patchResponse.data);
 
-      toast.success(successMessage);
       setLoading(false);
       retryPatchCount = 0;
       if (resetForm !== "" && resetForm !== undefined) {

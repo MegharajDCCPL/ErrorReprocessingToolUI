@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Button, OverlayTrigger, Tooltip, Form } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import TableUtility from "../../components/common/data-table/TableUtility";
-import styles from "./SettingsPage.module.css";
+import styles from "./Interface.Module.css";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
@@ -11,7 +11,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
-const SettingsPage = () => {
+const InterfaceGroupManagement = () => {
   const [formData, setFormData] = useState({
     interfaceId: null,
     interfaceName: "",
@@ -222,7 +222,7 @@ const SettingsPage = () => {
             <Button
               className={`${styles["btn-delete"]}`}
               variant="outline-danger"
-              onClick={() => handleDeleteUser(row)} // Pass row data here
+              onClick={() => handleDeleteUser(row)}
             >
               <DeleteIcon className={`${styles["btn-delete-icon"]}`} />
             </Button>
@@ -276,7 +276,7 @@ const SettingsPage = () => {
       });
 
       payload["interfaceUserListToAdd"] = interfaceUserListToAdd;
-      payload["interfaceUsersToRemove"] = interfaceUsersToRemove; // Use the state here
+      payload["interfaceUsersToRemove"] = interfaceUsersToRemove;
       if (
         payload["interfaceUserListToAdd"].length === 0 &&
         payload["interfaceUsersToRemove"].length === 0
@@ -307,7 +307,7 @@ const SettingsPage = () => {
     <>
       <div
         style={{ height: "87vh" }}
-        className={`${styles["Settings-page"]} d-flex flex-column overflow-auto ms-3 me-3 mt-3 mb-2 gap-3`}
+        className={`${styles["Settings-page"]} d-flex flex-column overflow-auto ms-3  mb-2 gap-3`}
       >
         <ToastContainer />
         <div className="d-flex flex-column ">
@@ -322,7 +322,6 @@ const SettingsPage = () => {
                   options={interfaceApiResponse}
                   placeholder="Choose an Interface..."
                   onChange={handleInterfaceChange}
-                  // isLoading={loading}
                   ref={typeaheadInterfaceRef}
                 />
               </Form.Group>
@@ -378,4 +377,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default InterfaceGroupManagement;
