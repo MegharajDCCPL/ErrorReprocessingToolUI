@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import TableUtility from "../common/modified-datatable/TableUtility";
+import EditableCell from "../common/modified-datatable/EditableCell";
 import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import DatePicker from "react-datepicker";
@@ -37,7 +38,7 @@ const ReOpen = () => {
   const [allDataCount, setAllDataCount] = useState("");
   const [loading, setLoading] = useState(false);
   const [ranges, setRanges] = useState([]);
-  const [selectedErrors, setSelectedErrors] = useState([]);
+  const [selectAllErrors, setSelectAllErrors] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [filteredDataApiRes, setFilteredDataApiRes] = useState({});
@@ -73,14 +74,22 @@ const ReOpen = () => {
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      setFilteredData(initialFilteredData["closedErrors"]);
+      const updatedData = initialFilteredData["closedErrors"].map((row) => ({
+        ...row,
+        isChecked: false,
+      }));
+      setFilteredData(updatedData);
     }
   }, [initialFilteredData]);
 
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        setFilteredData(filteredDataApiRes["closedErrors"]);
+        const updatedData = filteredDataApiRes["closedErrors"].map((row) => ({
+          ...row,
+          isChecked: false,
+        }));
+        setFilteredData(updatedData);
       }
     } catch (error) {
       ErrorLogger(error);
@@ -103,24 +112,27 @@ const ReOpen = () => {
     }));
   };
 
-  const handleCheckboxChange = (errorId) => {
-    setSelectedErrors((prevSelected) => {
-      if (prevSelected.includes(errorId)) {
-        // If the message ID is already selected, uncheck it
-        return prevSelected.filter((id) => id !== errorId);
-      } else {
-        // Otherwise, add it to the selected list
-        return [...prevSelected, errorId];
-      }
+  const handleCheckboxChange = (row) => {
+    setFilteredData((prevData) => {
+      const updatedData = prevData.map((dataRow) =>
+        dataRow.errorId === row.errorId
+          ? { ...dataRow, isChecked: !dataRow.isChecked }
+          : dataRow
+      );
+      const allChecked = updatedData.every((dataRow) => dataRow.isChecked);
+      setSelectAllErrors(allChecked);
+      return updatedData;
     });
   };
 
-  const handleSelectAllChange = (e) => {
-    if (e.target.checked) {
-      setSelectedErrors(filteredData.map((row) => row.errorId));
-    } else {
-      setSelectedErrors([]);
-    }
+  const handleSelectAllChange = () => {
+    setSelectAllErrors(!selectAllErrors);
+    setFilteredData((prevData) => {
+      return prevData.map((dataRow) => ({
+        ...dataRow,
+        isChecked: !selectAllErrors,
+      }));
+    });
   };
 
   const handleDropdownChange = async (selected, fieldName) => {
@@ -132,6 +144,7 @@ const ReOpen = () => {
 
   // Handle closing selected errors
   const handleCloseError = async () => {
+    const selectedErrors = filteredData.filter((row) => row.isChecked);
     if (selectedErrors.length === 0) {
       toast.info("No errors selected for closing.");
       return;
@@ -168,13 +181,9 @@ const ReOpen = () => {
         `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`
       )
     );
-    setSelectedErrors([]);
   };
 
   const handleReset = async () => {
-    // Clear the selected errors
-    setSelectedErrors([]);
-
     // Reset form data
     setFormData({
       MessageId: "",
@@ -225,10 +234,6 @@ const ReOpen = () => {
     return filterURL;
   };
 
-  // Check if all individual checkboxes are selected
-  const isAllSelected =
-    filteredData.length > 0 && selectedErrors.length === filteredData.length;
-
   // Grid columns with checkboxes
   const gridColumns = [
     {
@@ -237,20 +242,12 @@ const ReOpen = () => {
           custom="true"
           type="checkbox"
           id="selectAllCheckbox"
-          checked={isAllSelected}
-          onChange={handleSelectAllChange}
+          checked={selectAllErrors}
+          onChange={() => handleSelectAllChange()}
         />
       ),
-      accessor: "Select",
-      Cell: ({ row }) => (
-        <Form.Check
-          custom="true"
-          type="checkbox"
-          id={`checkbox-${row.original.errorId}`}
-          checked={selectedErrors.includes(row.original.errorId)}
-          onChange={() => handleCheckboxChange(row.original.errorId)}
-        />
-      ),
+      accessor: "isChecked",
+      Cell: (props) => <EditableCell {...props} type="checkbox" />,
     },
     { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
@@ -641,7 +638,9 @@ const ReOpen = () => {
           <TableUtility
             gridColumns={gridColumns.filter((column) => column.show !== false)}
             gridData={filteredData}
+            setData={setFilteredData}
             pageSizes={[5, 10, 20]}
+            customMethod={handleCheckboxChange}
           />
         </div>
       </div>

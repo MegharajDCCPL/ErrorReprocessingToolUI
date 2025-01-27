@@ -9,6 +9,7 @@ import InterfaceGroupManagement from "./pages/General Configuration/InterfaceGro
 import PurgePage from "./pages/purge/PurgePage";
 import LaunchPage from "./pages/launch/LaunchPage";
 import InterfaceManagement from "./pages/General Configuration/InterfaceManagement";
+import ActionReportPage from "./pages/actionreport/ActionReportPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<LaunchPage />} />
         <Route path="/homepage" element={<HomePage />}>
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="actionreport" element={<ActionReportPage />} />
           <Route path="reprocesserrors" element={<ReprocessPage />} />
           <Route path="archive" element={<ArchivePage />} />
           <Route path="reopenerrors" element={<ReOpenErrorsPage />} />

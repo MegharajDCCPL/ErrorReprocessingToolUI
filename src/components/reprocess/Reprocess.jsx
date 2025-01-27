@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import TableUtility from "../common/modified-datatable/TableUtility";
+import EditableCell from "../common/modified-datatable/EditableCell";
 import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import styles from "./Reprocess.module.css";
 import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
-import { FaFilter } from "react-icons/fa";
+import { FaFilter, FaInfo } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 import { useUser } from "../common/UserProvider";
 
@@ -37,7 +39,8 @@ const Reprocess = () => {
   const [allDataCount, setAllDataCount] = useState("");
   const [loading, setLoading] = useState(false);
   const [ranges, setRanges] = useState([]);
-  const [selectedErrors, setSelectedErrors] = useState([]);
+
+  const [selectAllErrors, setSelectAllErrors] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [filteredDataApiRes, setFilteredDataApiRes] = useState({});
@@ -71,14 +74,22 @@ const Reprocess = () => {
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      setFilteredData(initialFilteredData["openErrors"]);
+      const updatedData = initialFilteredData["openErrors"].map((row) => ({
+        ...row,
+        isChecked: false,
+      }));
+      setFilteredData(updatedData);
     }
   }, [initialFilteredData]);
 
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        setFilteredData(filteredDataApiRes["openErrors"]);
+        const updatedData = filteredDataApiRes["openErrors"].map((row) => ({
+          ...row,
+          isChecked: false,
+        }));
+        setFilteredData(updatedData);
       }
     } catch (error) {
       ErrorLogger(error);
@@ -101,24 +112,27 @@ const Reprocess = () => {
     }));
   };
 
-  const handleCheckboxChange = (errorId) => {
-    setSelectedErrors((prevSelected) => {
-      if (prevSelected.includes(errorId)) {
-        // If the message ID is already selected, uncheck it
-        return prevSelected.filter((id) => id !== errorId);
-      } else {
-        // Otherwise, add it to the selected list
-        return [...prevSelected, errorId];
-      }
+  const handleCheckboxChange = (row) => {
+    setFilteredData((prevData) => {
+      const updatedData = prevData.map((dataRow) =>
+        dataRow.errorId === row.errorId
+          ? { ...dataRow, isChecked: !dataRow.isChecked }
+          : dataRow
+      );
+      const allChecked = updatedData.every((dataRow) => dataRow.isChecked);
+      setSelectAllErrors(allChecked);
+      return updatedData;
     });
   };
 
-  const handleSelectAllChange = (e) => {
-    if (e.target.checked) {
-      setSelectedErrors(filteredData.map((row) => row.errorId));
-    } else {
-      setSelectedErrors([]);
-    }
+  const handleSelectAllChange = () => {
+    setSelectAllErrors(!selectAllErrors);
+    setFilteredData((prevData) => {
+      return prevData.map((dataRow) => ({
+        ...dataRow,
+        isChecked: !selectAllErrors,
+      }));
+    });
   };
 
   const handleDropdownChange = async (selected, fieldName) => {
@@ -130,6 +144,7 @@ const Reprocess = () => {
 
   // Handle reprocessing selected errors
   const handleReprocess = async () => {
+    const selectedErrors = filteredData.filter((row) => row.isChecked);
     if (selectedErrors.length === 0) {
       toast.info("No messages selected for reprocessing.");
       return;
@@ -162,6 +177,7 @@ const Reprocess = () => {
 
   // Handle closing selected errors
   const handleCloseError = async () => {
+    const selectedErrors = filteredData.filter((row) => row.isChecked);
     if (selectedErrors.length === 0) {
       toast.info("No errors selected for closing.");
       return;
@@ -199,13 +215,9 @@ const Reprocess = () => {
         `${ERT_API_URLS.Open_Errors_URL}?ServerName=${userDetails.serverName}`
       )
     );
-    setSelectedErrors([]);
   };
 
   const handleReset = async () => {
-    // Clear the selected errors
-    setSelectedErrors([]);
-
     // Reset form data
     setFormData({
       MessageId: "",
@@ -257,10 +269,6 @@ const Reprocess = () => {
     return filterURL;
   };
 
-  // Check if all individual checkboxes are selected
-  const isAllSelected =
-    filteredData.length > 0 && selectedErrors.length === filteredData.length;
-
   // Grid columns with checkboxes
   const gridColumns = [
     {
@@ -269,22 +277,14 @@ const Reprocess = () => {
           custom="true"
           type="checkbox"
           id="selectAllCheckbox"
-          checked={isAllSelected}
-          onChange={handleSelectAllChange}
+          checked={selectAllErrors}
+          onChange={() => handleSelectAllChange()}
         />
       ),
-      accessor: "Select",
-      Cell: ({ row }) => (
-        <Form.Check
-          custom="true"
-          type="checkbox"
-          id={`checkbox-${row.original.errorId}`}
-          checked={selectedErrors.includes(row.original.errorId)}
-          onChange={() => handleCheckboxChange(row.original.errorId)}
-        />
-      ),
+      accessor: "isChecked",
+      Cell: (props) => <EditableCell {...props} type="checkbox" />,
     },
-    { Header: "Error ID", accessor: "errorId", show: false },
+
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
@@ -297,7 +297,7 @@ const Reprocess = () => {
     { Header: "Response", accessor: "response" },
     { Header: "Original Message Content", accessor: "originalMessageContent" },
     { Header: "Request", accessor: "request" },
-    { Header: "Sequencer Error", accessor: "sequencerError" },
+    { Header: "Error ID", accessor: "errorId" },
   ];
 
   const handleFilter = async () => {
@@ -423,6 +423,28 @@ const Reprocess = () => {
     }
     setRanges(newRanges);
   };
+  const tooltipMessage = (
+    <>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <span
+          className={styles["tooltip"]}
+          style={{
+            backgroundColor: "#ffcccc",
+          }}
+        ></span>
+        <span className={styles["tooltip-text"]}>Ready to Close</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <span
+          className={styles["tooltip"]}
+          style={{
+            backgroundColor: "#ffff99",
+          }}
+        ></span>
+        <span className={styles["tooltip-text"]}>Ready to Reprocess</span>
+      </div>
+    </>
+  );
 
   return (
     <div className="">
@@ -462,6 +484,15 @@ const Reprocess = () => {
             onClick={() => setShowFilters(!showFilters)}
           >
             <FaFilter />
+          </Button>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          placement="right"
+          overlay={<Tooltip id="status-tooltip">{tooltipMessage}</Tooltip>}
+        >
+          <Button variant="outline-primary" size="sm">
+            <FaInfo />
           </Button>
         </OverlayTrigger>
       </div>
@@ -655,7 +686,10 @@ const Reprocess = () => {
           <TableUtility
             gridColumns={gridColumns.filter((column) => column.show !== false)}
             gridData={filteredData}
+            setData={setFilteredData}
             pageSizes={[5, 10, 20]}
+            customMethod={handleCheckboxChange}
+            StatusColumnName={"errorId"}
           />
         </div>
       </div>
