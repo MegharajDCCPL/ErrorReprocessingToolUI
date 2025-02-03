@@ -255,7 +255,7 @@ const LaunchComponent = () => {
       if (moduleRes.includes("Dashboard")) {
         defaultMenuName = "dashboard";
       } else if (moduleRes.includes("ReProcess Errors")) {
-        defaultMenuName = "reprocess";
+        defaultMenuName = "reprocesserrors";
       } else if (moduleRes.includes("ReOpen Errors")) {
         defaultMenuName = "close";
       } else if (moduleRes.includes("Archive Errors")) {

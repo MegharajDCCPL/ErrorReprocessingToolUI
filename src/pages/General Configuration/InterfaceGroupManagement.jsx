@@ -28,7 +28,8 @@ const InterfaceGroupManagement = () => {
   const [selectInterfaceId, setSelectInterfaceId] = useState([]);
   const [usersToUpdate, setUsersToUpdate] = useState([]);
   const [userOption, setUserOption] = useState([]);
-  const [interfaceUsersToRemove, setInterfaceUsersToRemove] = useState([]);
+  const [nexusUserListToAdd, setNexusUserListToAdd] = useState([]);
+  const [userListToRemove, setUserListToRemove] = useState([]);
   const [archiveAll, setArchiveAll] = useState(false);
 
   const [errors, setErrors] = useState({});
@@ -51,7 +52,7 @@ const InterfaceGroupManagement = () => {
         setGridData
       );
     } catch (error) {
-      console.error("Error fetching users:", error);
+      ErrorLogger("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,9 @@ const InterfaceGroupManagement = () => {
 
   const fetchInterfaceList = async () => {
     await ApiMethods.handleApiGetAction(
-      ERT_API_URLS.InterfaceList_URL,
+      // ERT_API_URLS.InterfaceList_URL,
+      `${ERT_API_URLS.InterfaceList_URL}/15`, //serverId has to be updated once userdetails updated with server Id
+
       "Interface Not found",
       0,
       setLoading,
@@ -110,33 +113,81 @@ const InterfaceGroupManagement = () => {
     setSelectedUsers(selected);
   };
 
+  // const handleAddUser = () => {
+  //   const { interfaceId, userId, userName, emailId } = formData;
+
+  //   // Validate inputs
+  //   if (!interfaceId) {
+  //     toast.info("Please select an interface before adding a user.");
+  //     return;
+  //   }
+
+  //   if (!userId) {
+  //     toast.info("Please enter a username.");
+  //     return;
+  //   }
+
+  //   // Check for duplicate entries
+  //   if (gridData.some((user) => user.userId === userId)) {
+  //     toast.info("User already exists in the grid.");
+  //     return;
+  //   }
+
+  //   // Add the user to the grid data
+  //   setGridData((prevGridData) => [
+  //     ...prevGridData,
+  //     { interfaceId, userId, userName, emailId },
+  //   ]);
+
+  //   // Reset formData and typeahead
+  //   setFormData((prevFormData) => ({
+  //     ...prevFormData,
+  //     userId: null,
+  //     userName: "",
+  //     emailId: "",
+  //   }));
+
+  //   if (typeaheadUserRef.current) {
+  //     typeaheadUserRef.current.clear();
+  //   }
+
+  //   // Add user to the state for updates
+  //   setUsersToUpdate((prevUsersToUpdate) => [
+  //     ...prevUsersToUpdate,
+  //     {
+  //       interfaceId,
+  //       userId,
+  //       userName,
+  //       emailId,
+  //       isAdded: true,
+  //     },
+  //   ]);
+
+  //   // toast.success("User added successfully!");
+  // };
   const handleAddUser = () => {
     const { interfaceId, userId, userName, emailId } = formData;
 
-    // Validate inputs
     if (!interfaceId) {
       toast.info("Please select an interface before adding a user.");
       return;
     }
-
     if (!userId) {
       toast.info("Please enter a username.");
       return;
     }
-
-    // Check for duplicate entries
     if (gridData.some((user) => user.userId === userId)) {
       toast.info("User already exists in the grid.");
       return;
     }
 
-    // Add the user to the grid data
     setGridData((prevGridData) => [
       ...prevGridData,
       { interfaceId, userId, userName, emailId },
     ]);
 
-    // Reset formData and typeahead
+    setNexusUserListToAdd((prev) => [...prev, userId]); // Store only userId
+
     setFormData((prevFormData) => ({
       ...prevFormData,
       userId: null,
@@ -147,54 +198,58 @@ const InterfaceGroupManagement = () => {
     if (typeaheadUserRef.current) {
       typeaheadUserRef.current.clear();
     }
-
-    // Add user to the state for updates
-    setUsersToUpdate((prevUsersToUpdate) => [
-      ...prevUsersToUpdate,
-      {
-        interfaceId,
-        userId,
-        userName,
-        emailId,
-        isAdded: true,
-      },
-    ]);
-
-    // toast.success("User added successfully!");
   };
 
+  // const handleDeleteUser = (row) => {
+  //   try {
+  //     const userIdInGridToRemove = row.original.interfaceUserId;
+
+  //     // If `interfaceUserId` exists, add it to `interfaceUsersToRemove`
+  //     if (userIdInGridToRemove !== undefined) {
+  //       setInterfaceUsersToRemove((prevIds) => [
+  //         ...prevIds,
+  //         userIdInGridToRemove,
+  //       ]);
+  //     }
+
+  //     // Removing the specific user from `gridData`
+  //     const updatedGridUsers = gridData.filter(
+  //       (user, index) =>
+  //         !(
+  //           user.interfaceUserId === userIdInGridToRemove && index === row.index
+  //         )
+  //     );
+  //     setGridData(updatedGridUsers);
+
+  //     // Update `usersToUpdate` for added and deleted users
+  //     const updatedUsersToUpdate = usersToUpdate.map((user) => {
+  //       if (user.interfaceUserId === userIdInGridToRemove) {
+  //         if (user.isAdded) {
+  //           return { ...user, isAdded: undefined };
+  //         }
+  //         return { ...user, isDeleted: true };
+  //       }
+  //       return user;
+  //     });
+  //     setUsersToUpdate(updatedUsersToUpdate);
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
   const handleDeleteUser = (row) => {
     try {
-      const userIdInGridToRemove = row.original.interfaceUserId;
+      const userIdToRemove = row.original.userId; // Get the userId
 
-      // If `interfaceUserId` exists, add it to `interfaceUsersToRemove`
-      if (userIdInGridToRemove !== undefined) {
-        setInterfaceUsersToRemove((prevIds) => [
-          ...prevIds,
-          userIdInGridToRemove,
-        ]);
+      if (userIdToRemove !== undefined) {
+        setUserListToRemove((prev) => [...prev, userIdToRemove]); // Store userId
       }
 
       // Removing the specific user from `gridData`
       const updatedGridUsers = gridData.filter(
         (user, index) =>
-          !(
-            user.interfaceUserId === userIdInGridToRemove && index === row.index
-          )
+          !(user.userId === userIdToRemove && index === row.index)
       );
       setGridData(updatedGridUsers);
-
-      // Update `usersToUpdate` for added and deleted users
-      const updatedUsersToUpdate = usersToUpdate.map((user) => {
-        if (user.interfaceUserId === userIdInGridToRemove) {
-          if (user.isAdded) {
-            return { ...user, isAdded: undefined };
-          }
-          return { ...user, isDeleted: true };
-        }
-        return user;
-      });
-      setUsersToUpdate(updatedUsersToUpdate);
     } catch (error) {
       ErrorLogger(error);
     }
@@ -207,7 +262,7 @@ const InterfaceGroupManagement = () => {
   const gridColumns = [
     { Header: "interface Id", accessor: "interfaceId", show: false },
     { Header: "interface user Id", accessor: "interfaceUserId", show: false },
-    { Header: "User Id", accessor: "userId" },
+    { Header: "User Id", accessor: "userId", show: false },
     { Header: "Username", accessor: "userName" },
     { Header: "Email", accessor: "emailId" },
     {
@@ -253,37 +308,70 @@ const InterfaceGroupManagement = () => {
         typeaheadUserRef.current.clear();
       }
     } catch (error) {
-      console.log(error);
+      ErrorLogger(error);
     }
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const payload = {};
+  //     const interfaceUserListToAdd = [];
+
+  //     gridData.forEach((data) => {
+  //       if (data.interfaceUserId === undefined) {
+  //         interfaceUserListToAdd.push({
+  //           interfaceUserId: 0,
+  //           interfaceId: data.interfaceId,
+  //           userId: data.userId,
+  //           userName: data.userName,
+  //           emailId: data.emailId,
+  //         });
+  //       }
+  //     });
+  //     console.log("payload", payload);
+  //     payload["interfaceUserListToAdd"] = interfaceUserListToAdd;
+  //     payload["interfaceUsersToRemove"] = interfaceUsersToRemove;
+  //     if (
+  //       payload["interfaceUserListToAdd"].length === 0 &&
+  //       payload["interfaceUsersToRemove"].length === 0
+  //     ) {
+  //       toast.info("No changes to submit.");
+  //       return;
+  //     }
+  //     await ApiMethods.handleApiPatchAction(
+  //       ERT_API_URLS.UsersList_URL,
+  //       formData,
+  //       "",
+  //       retryPatchCount,
+  //       payload,
+  //       setErrors,
+  //       setLoading,
+  //       `Userslist updated`,
+  //       `failed to update`,
+  //       resetForm
+  //     );
+  //   } catch (error) {
+  //     ErrorLogger(error);
+  //   }
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = {};
-      const interfaceUserListToAdd = [];
-
-      gridData.forEach((data) => {
-        if (data.interfaceUserId === undefined) {
-          interfaceUserListToAdd.push({
-            interfaceUserId: 0,
-            interfaceId: data.interfaceId,
-            userId: data.userId,
-            userName: data.userName,
-            emailId: data.emailId,
-          });
-        }
-      });
-
-      payload["interfaceUserListToAdd"] = interfaceUserListToAdd;
-      payload["interfaceUsersToRemove"] = interfaceUsersToRemove;
+      const payload = {
+        interfaceId: formData.interfaceId, // Ensure interfaceId is included
+        nexusUserListToAdd: nexusUserListToAdd,
+        userListToRemove: userListToRemove,
+      };
+      console.log("payload for submit", payload);
       if (
-        payload["interfaceUserListToAdd"].length === 0 &&
-        payload["interfaceUsersToRemove"].length === 0
+        payload.nexusUserListToAdd.length === 0 &&
+        payload.userListToRemove.length === 0
       ) {
         toast.info("No changes to submit.");
         return;
       }
+
       await ApiMethods.handleApiPatchAction(
         ERT_API_URLS.UsersList_URL,
         formData,
@@ -292,12 +380,14 @@ const InterfaceGroupManagement = () => {
         payload,
         setErrors,
         setLoading,
-        `Userslist updated`,
-        `failed to update`,
+        `Users list updated`,
+        `Failed to update`,
         resetForm
       );
 
-      console.log(payload);
+      // Reset the tracking lists after submission
+      setNexusUserListToAdd([]);
+      setUserListToRemove([]);
     } catch (error) {
       ErrorLogger(error);
     }
