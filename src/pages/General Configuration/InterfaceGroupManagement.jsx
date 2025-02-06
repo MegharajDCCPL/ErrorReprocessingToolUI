@@ -238,7 +238,7 @@ const InterfaceGroupManagement = () => {
   // };
   const handleDeleteUser = (row) => {
     try {
-      const userIdToRemove = row.original.userId; // Get the userId
+      const userIdToRemove = row.original.nxUserId; // Get the userId
 
       if (userIdToRemove !== undefined) {
         setUserListToRemove((prev) => [...prev, userIdToRemove]); // Store userId
@@ -247,7 +247,7 @@ const InterfaceGroupManagement = () => {
       // Removing the specific user from `gridData`
       const updatedGridUsers = gridData.filter(
         (user, index) =>
-          !(user.userId === userIdToRemove && index === row.index)
+          !(user.nxUserId === userIdToRemove && index === row.index)
       );
       setGridData(updatedGridUsers);
     } catch (error) {
@@ -300,7 +300,7 @@ const InterfaceGroupManagement = () => {
       setIsInterfaceSelected(false);
       setSelectedUsers([]);
       setUsersToUpdate([]);
-      setInterfaceUsersToRemove([]);
+      // setInterfaceUsersToRemove([]);
       if (typeaheadInterfaceRef.current) {
         typeaheadInterfaceRef.current.clear();
       }

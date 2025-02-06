@@ -114,11 +114,11 @@ const ViewInterface = () => {
     { Header: "Interface Id", accessor: "interfaceId", show: false },
     { Header: "Interface Name", accessor: "interfaceName" },
     { Header: "Interface Type", accessor: "interfaceType" },
-    // { Header: "Server Name", accessor:"serverName" },
-    {
-      Header: "Server Name",
-      Cell: () => <>{userDetails?.serverName || "N/A"}</>,
-    },
+    { Header: "Server Name", accessor: "nxServerName" },
+    // {
+    //   Header: "Server Name",
+    //   Cell: () => <>{userDetails?.serverName || "N/A"}</>,
+    // },
     { Header: "Description", accessor: "description" },
     {
       Header: "Edit Interface",
