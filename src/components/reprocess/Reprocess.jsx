@@ -13,6 +13,7 @@ import ErrorLogger from "../common/ErrorLogger";
 import { FaFilter, FaInfo } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 import { useUser } from "../common/UserProvider";
+import * as XLSX from "xlsx";
 
 const Reprocess = () => {
   const { setSelectedComponentName, userDetails } = useUser();
@@ -51,6 +52,34 @@ const Reprocess = () => {
     { label: "Outbound" },
   ]);
 
+  const handleDownloadExcel = () => {
+    if (!filteredData || filteredData.length === 0) {
+      toast.info("No data available to download");
+      return;
+    }
+
+    const headers = gridColumns
+      .filter(
+        (column) => column.show !== false && column.accessor !== "isChecked"
+      )
+      .map((column) => column.Header);
+
+    const rows = filteredData.map((row) => {
+      return gridColumns
+        .filter(
+          (column) => column.show !== false && column.accessor !== "isChecked"
+        )
+        .map((column) => row[column.accessor]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Error Data");
+
+    XLSX.writeFile(wb, "Error_Data.xlsx");
+  };
+
   // Generate ranges based on all data count
   useEffect(() => {
     if (allDataCount !== "") {
@@ -74,10 +103,12 @@ const Reprocess = () => {
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      const updatedData = initialFilteredData["openErrors"].map((row) => ({
-        ...row,
-        isChecked: false,
-      }));
+      const updatedData = initialFilteredData["actionableErrors"].map(
+        (row) => ({
+          ...row,
+          isChecked: false,
+        })
+      );
       setFilteredData(updatedData);
     }
   }, [initialFilteredData]);
@@ -85,10 +116,12 @@ const Reprocess = () => {
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        const updatedData = filteredDataApiRes["openErrors"].map((row) => ({
-          ...row,
-          isChecked: false,
-        }));
+        const updatedData = filteredDataApiRes["actionableErrors"].map(
+          (row) => ({
+            ...row,
+            isChecked: false,
+          })
+        );
         setFilteredData(updatedData);
       }
     } catch (error) {
@@ -145,6 +178,7 @@ const Reprocess = () => {
   // Handle reprocessing selected errors
   const handleReprocess = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
+
     if (selectedErrors.length === 0) {
       toast.info("No messages selected for reprocessing.");
       return;
@@ -152,7 +186,10 @@ const Reprocess = () => {
 
     const payload = {
       serverName: userDetails.serverName,
-      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+      errorDetails: selectedErrors.map((error) => ({
+        errorId: error.errorId,
+        comment: error.comments,
+      })),
     };
 
     try {
@@ -178,6 +215,7 @@ const Reprocess = () => {
   // Handle closing selected errors
   const handleCloseError = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
+
     if (selectedErrors.length === 0) {
       toast.info("No errors selected for closing.");
       return;
@@ -185,7 +223,10 @@ const Reprocess = () => {
 
     const payload = {
       serverName: userDetails.serverName,
-      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+      errorDetails: selectedErrors.map((error) => ({
+        errorId: error.errorId,
+        comment: error.comments,
+      })),
     };
 
     try {
@@ -210,6 +251,7 @@ const Reprocess = () => {
 
   // Handle success after closing errors, fetch updated records
   const handleRefreshPage = async () => {
+    setFilteredData([]);
     await handleFilteredData(
       constructFilterURL(
         `${ERT_API_URLS.Open_Errors_URL}?ServerName=${userDetails.serverName}`
@@ -284,7 +326,11 @@ const Reprocess = () => {
       accessor: "isChecked",
       Cell: (props) => <EditableCell {...props} type="checkbox" />,
     },
-
+    {
+      Header: "Comments",
+      accessor: "comments",
+      Cell: (props) => <EditableCell {...props} type="text" />,
+    },
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
@@ -297,7 +343,8 @@ const Reprocess = () => {
     { Header: "Response", accessor: "response" },
     { Header: "Original Message Content", accessor: "originalMessageContent" },
     { Header: "Request", accessor: "request" },
-    { Header: "Error ID", accessor: "errorId" },
+    { Header: "Error ID", accessor: "errorId", show: false },
+    { Header: "Error Status", accessor: "errorStatus" },
   ];
 
   const handleFilter = async () => {
@@ -337,7 +384,7 @@ const Reprocess = () => {
       );
       if (apiResponse !== null) {
         setAllDataCount(apiResponse["totalRecords"]);
-        setFilteredData(apiResponse["openErrors"]);
+        setFilteredData(apiResponse["actionableErrors"]);
       } else {
         setAllDataCount("0");
         setFilteredData([]);
@@ -689,12 +736,20 @@ const Reprocess = () => {
             setData={setFilteredData}
             pageSizes={[5, 10, 20]}
             customMethod={handleCheckboxChange}
-            StatusColumnName={"errorId"}
+            StatusColumnName={"errorStatus"}
           />
         </div>
       </div>
 
       <div className="d-flex justify-content-end gap-3 mt-2 pt-2 ms-3 me-3 border-top border-subtle">
+        <Button
+          id="download-excel-btn"
+          variant="outline-primary"
+          size="sm"
+          onClick={handleDownloadExcel}
+        >
+          Download Excel
+        </Button>
         <Button
           id="close-errors-btn"
           variant="outline-danger"

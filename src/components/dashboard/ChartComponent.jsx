@@ -35,89 +35,66 @@ const ChartsComponent = () => {
   const [loading, setLoading] = useState(false);
 
   const fixedColors = [
-    "#FF5733",
-    "#33FF57",
-    "#3357FF",
-    "#F1C40F",
-    "#9B59B6",
-    "#E74C3C",
-    "#16A085",
-    "#1ABC9C",
-    "#2ECC71",
-    "#3498DB",
-    "#F39C12",
-    "#D35400",
-    "#BDC3C7",
-    "#34495E",
-    "#7F8C8D",
-    "#2C3E50",
-    "#8E44AD",
-    "#2980B9",
-    "#27AE60",
-    "#F1C40F",
-    "#D35400",
-    "#9B59B6",
-    "#34495E",
-    "#F39C12",
-    "#E74C3C",
-    "#16A085",
-    "#1ABC9C",
-    "#9B59B6",
-    "#2ECC71",
-    "#3498DB",
-    "#F1C40F",
-    "#7F8C8D",
-    "#16A085",
-    "#F39C12",
-    "#E74C3C",
-    "#F1C40F",
-    "#2980B9",
-    "#9B59B6",
-    "#E74C3C",
-    "#FF5733",
-    "#33FF57",
-    "#7F8C8D",
-    "#8E44AD",
-    "#34495E",
-    "#1ABC9C",
-    "#2ECC71",
-    "#3498DB",
-    "#F1C40F",
-    "#D35400",
-    "#BDC3C7",
-    "#FF5733",
-    "#8E44AD",
-    "#9B59B6",
+    // "#FF5733",
+    // "#33FF57",
+    // "#3357FF",
+    // "#F1C40F",
+    // "#9B59B6",
+    // "#E74C3C",
+    // "#16A085",
+    // "#1ABC9C",
+    // "#2ECC71",
+    // "#3498DB",
+    // "#F39C12",
+    // "#D35400",
+    // "#BDC3C7",
+    // "#34495E",
+    // "#7F8C8D",
+    // "#2C3E50",
+    // "#8E44AD",
+    // "#2980B9",
+    // "#27AE60",
+    // "#F1C40F",
+    // "#D35400",
+    // "#9B59B6",
+    // "#34495E",
+    // "#F39C12",
+    // "#E74C3C",
+    // "#16A085",
+    // "#1ABC9C",
+    // "#9B59B6",
+    // "#2ECC71",
+    // "#3498DB",
+    // "#F1C40F",
+    // "#7F8C8D",
+    // "#16A085",
+    // "#F39C12",
+    // "#E74C3C",
+    // "#F1C40F",
+    // "#2980B9",
+    // "#9B59B6",
+    // "#E74C3C",
+    // "#FF5733",
+    // "#33FF57",
+    // "#7F8C8D",
+    // "#8E44AD",
+    // "#34495E",
+    // "#1ABC9C",
+    // "#2ECC71",
+    // "#3498DB",
+    // "#F1C40F",
+    // "#D35400",
+    // "#BDC3C7",
+    "#78C3CD",
+    "#021A20",
+    "#FFB0AD",
   ];
 
   useEffect(() => {
     fetchPieChartData();
     fetchBarChartData();
   }, []);
-  const dummyPieData = {
-    labels: ["Category 1", "Category 2", "Category 3", "Category 4"],
-    datasets: [
-      {
-        data: [20, 30, 25, 25],
-        backgroundColor: fixedColors.slice(0, 4),
-        borderColor: "#FFFFFF",
-        borderWidth: 2,
-        hoverOffset: 4,
-        datalabels: {
-          anchor: "end",
-          align: "end",
-          color: "#fff",
-          backgroundColor: function (context) {
-            return context.dataset.backgroundColor;
-          },
-          borderRadius: 4,
-          font: {
-            weight: "bold",
-          },
-        },
-      },
-    ],
-  };
+
   const fetchPieChartData = async () => {
     try {
       setLoading(true);
@@ -134,7 +111,7 @@ const ChartsComponent = () => {
       const values = Object.values(response);
 
       // Cycle through fixed colors instead of generating random colors
-      const colors = fixedColors.slice(0, values.length); // Get a slice of the fixed colors
+      const colors = fixedColors.slice(0, values.length);
 
       const total = values.reduce((acc, value) => acc + value, 0);
 
@@ -142,7 +119,7 @@ const ChartsComponent = () => {
         labels: categories,
         datasets: [
           {
-            data: values.map((value) => (value / total) * 100),
+            data: values.map((value) => value),
             backgroundColor: colors,
             borderColor: "#FFFFFF",
             borderWidth: 2,

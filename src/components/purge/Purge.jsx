@@ -13,6 +13,7 @@ import ErrorLogger from "../common/ErrorLogger";
 import { v4 as uuidv4 } from "uuid";
 import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
+import * as XLSX from "xlsx";
 
 const Purge = () => {
   const { setSelectedComponentName, userDetails } = useUser();
@@ -53,6 +54,32 @@ const Purge = () => {
   const [isPurgeAuto, setIsPurgeAuto] = useState(false);
   const [purgeText, setPurgeText] = useState("");
 
+  const handleDownloadExcel = () => {
+    if (!filteredData || filteredData.length === 0) {
+      toast.info("No data available to download");
+      return;
+    }
+    const headers = gridColumns
+      .filter(
+        (column) => column.show !== false && column.accessor !== "isChecked"
+      )
+      .map((column) => column.Header);
+
+    const rows = filteredData.map((row) => {
+      return gridColumns
+        .filter(
+          (column) => column.show !== false && column.accessor !== "isChecked"
+        )
+        .map((column) => row[column.accessor]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Error Data");
+
+    XLSX.writeFile(wb, "Error_Data.xlsx");
+  };
   useEffect(() => {
     fetchRetentionDays();
   }, []);
@@ -201,7 +228,10 @@ const Purge = () => {
 
     const payload = {
       serverName: userDetails.serverName,
-      errorIds: selectedErrors.map((id) => parseInt(id, 10)),
+      errorDetails: selectedErrors.map((error) => ({
+        errorId: error.errorId,
+        comment: error.comments,
+      })),
     };
 
     try {
@@ -226,6 +256,7 @@ const Purge = () => {
 
   // Handle success after closing errors, fetch updated records
   const handleRefreshPage = async () => {
+    setFilteredData([]);
     await handleFilteredData(
       constructFilterURL(
         `${ERT_API_URLS.Archived_Errors_URL}?ServerName=${userDetails.serverName}`
@@ -300,6 +331,11 @@ const Purge = () => {
       accessor: "isChecked",
       Cell: (props) => <EditableCell {...props} type="checkbox" />,
     },
+    {
+      Header: "Comments",
+      accessor: "comments",
+      Cell: (props) => <EditableCell {...props} type="text" />,
+    },
     { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
@@ -313,7 +349,6 @@ const Purge = () => {
     { Header: "Response", accessor: "response" },
     { Header: "Original Message Content", accessor: "originalMessageContent" },
     { Header: "Request", accessor: "request" },
-    { Header: "Sequencer Error", accessor: "sequencerError" },
   ];
 
   const handleFilter = async () => {
@@ -710,6 +745,14 @@ const Purge = () => {
       </div>
 
       <div className="d-flex justify-content-end mt-3 gap-3 pt-2 ms-3 me-3  border-top border-subtle">
+        <Button
+          id="download-excel-btn"
+          variant="outline-primary"
+          size="sm"
+          onClick={handleDownloadExcel}
+        >
+          Download Excel
+        </Button>
         <Button
           id="close-errors-btn"
           variant="outline-danger"

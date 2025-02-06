@@ -252,10 +252,10 @@ const LaunchComponent = () => {
     if (moduleRes !== null && moduleRes.length > 0) {
       // Need to mantain this default menu-name to avoid mis-match
       let defaultMenuName = moduleRes[0];
-      if (moduleRes.includes("Dashboard")) {
+      if (moduleRes.includes("Graphs")) {
         defaultMenuName = "dashboard";
       } else if (moduleRes.includes("ReProcess Errors")) {
-        defaultMenuName = "reprocess";
+        defaultMenuName = "reprocesserrors";
       } else if (moduleRes.includes("ReOpen Errors")) {
         defaultMenuName = "close";
       } else if (moduleRes.includes("Archive Errors")) {

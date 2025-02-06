@@ -6,7 +6,7 @@ import styles from "./LaunchPage.module.css";
 import ErrorLogger from "../common/ErrorLogger";
 
 const LaunchCarousel = ({ cardsData }) => {
-  const chunkSize = 6;
+  const chunkSize = 4;
   const cardChunks = [];
 
   try {
@@ -53,7 +53,7 @@ const LaunchCarousel = ({ cardsData }) => {
         className={`d-flex flex-column align-items-center ${styles["card-container"]}`}
       >
         <div className={styles["card-row"]}>
-          {cardChunks[currentCardIndex]?.slice(0, 3).map((card, index) => (
+          {cardChunks[currentCardIndex]?.slice(0, 2).map((card, index) => (
             <div key={index} className={`${styles.card}`}>
               <div className={styles["card-header"]}>
                 <img src={card.imgSrc} alt={card.title} />
@@ -66,7 +66,7 @@ const LaunchCarousel = ({ cardsData }) => {
           ))}
         </div>
         <div className={styles["card-row"]}>
-          {cardChunks[currentCardIndex]?.slice(3, 6).map((card, index) => (
+          {cardChunks[currentCardIndex]?.slice(2, 4).map((card, index) => (
             <div key={index} className={`${styles.card}`}>
               <div className={styles["card-header"]}>
                 <img src={card.imgSrc} alt={card.title} />

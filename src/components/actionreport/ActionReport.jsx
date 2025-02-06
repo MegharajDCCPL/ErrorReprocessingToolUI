@@ -12,6 +12,7 @@ import ErrorLogger from "../common/ErrorLogger";
 import { v4 as uuidv4 } from "uuid";
 import { FaFilter } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
+import * as XLSX from "xlsx";
 
 const ActionReport = () => {
   const { setSelectedComponentName, userDetails } = useUser();
@@ -50,10 +51,51 @@ const ActionReport = () => {
     { label: "Outbound" },
   ]);
 
-  const [actions, setActions] = useState([
-    { label: "Ready To Reprocess" },
-    { label: "Ready To Close" },
-  ]);
+  const [actions, setActions] = useState([]);
+  const [selectedAction, setSelectedAction] = useState([]);
+  const handleDownloadExcel = () => {
+    if (!filteredData || filteredData.length === 0) {
+      toast.info("No data available to download");
+      return;
+    }
+    const headers = gridColumns
+      .filter(
+        (column) => column.show !== false && column.accessor !== "isChecked"
+      )
+      .map((column) => column.Header);
+
+    const rows = filteredData.map((row) => {
+      return gridColumns
+        .filter(
+          (column) => column.show !== false && column.accessor !== "isChecked"
+        )
+        .map((column) => row[column.accessor]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Error Data");
+
+    XLSX.writeFile(wb, "Error_Data.xlsx");
+  };
+  useEffect(() => {
+    const fetchActions = async () => {
+      try {
+        //calling Get method
+        await ApiMethods.handleApiGetAction(
+          ERT_API_URLS.Actions_URL,
+          "Records doesn't exist.",
+          0,
+          setLoading,
+          setActions
+        );
+      } catch (error) {
+        ErrorLogger(error);
+      }
+    };
+    fetchActions();
+  }, []);
 
   // Generate ranges based on all data count
   useEffect(() => {
@@ -66,7 +108,7 @@ const ActionReport = () => {
   useEffect(() => {
     if (dataRangeDrop !== "") {
       const [start, end] = dataRangeDrop.split("-");
-      const generateUrl = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
+      const generateUrl = `${ERT_API_URLS.Action_Errors_URL}?ServerName=${userDetails.serverName}&startValue=${start}&endValue=${end}`;
 
       // If any filters are applied, modify the URL to include the filters
       if (isFilteredBtnClicked) {
@@ -80,7 +122,7 @@ const ActionReport = () => {
   // Handle filtered data response
   useEffect(() => {
     if (initialFilteredData && Object.keys(initialFilteredData).length > 0) {
-      const updatedData = initialFilteredData["closedErrors"].map((row) => ({
+      const updatedData = initialFilteredData["openErrors"].map((row) => ({
         ...row,
         isChecked: false,
       }));
@@ -91,7 +133,7 @@ const ActionReport = () => {
   useEffect(() => {
     try {
       if (filteredDataApiRes && Object.keys(filteredDataApiRes).length > 0) {
-        const updatedData = filteredDataApiRes["closedErrors"].map((row) => ({
+        const updatedData = filteredDataApiRes["openErrors"].map((row) => ({
           ...row,
           isChecked: false,
         }));
@@ -121,6 +163,7 @@ const ActionReport = () => {
   const handleDropdownChange = async (selected, fieldName) => {
     if (fieldName === "Action") {
       setActionEnable(true);
+      setSelectedAction(selected[0]);
     }
     setFormData((prevData) => ({
       ...prevData,
@@ -128,80 +171,57 @@ const ActionReport = () => {
     }));
   };
 
-  // Handle closing selected errors
-  // const handleActionError = async () => {
-  //   if (selectedErrors.length === 0) {
-  //     toast.info("No errors selected for Action.");
-  //     return;
-  //   }
-
-  //   const payload = {
-  //     serverName: userDetails.serverName,
-  //     errorIds: selectedErrors.map((id) => parseInt(id, 10)),
-  //   };
-
-  //   try {
-  //     await ApiMethods.handleApiPostAction(
-  //       "",
-  //       "",
-  //       ERT_API_URLS.Open_Closed_Errors_URL,
-  //       "",
-  //       "Error in taking Action",
-  //       "",
-  //       setLoading,
-  //       handleRefreshPage,
-  //       0, // Retry count
-  //       payload,
-  //       uuid,
-  //       setUuid
-  //     );
-  //   } catch (error) {
-  //     ErrorLogger(error);
-  //   }
-  // };
-
   const handleActionError = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
-    console.log("selectedErrors", selectedErrors);
+
     if (selectedErrors.length === 0) {
       toast.info("No errors selected for Action.");
       return;
     }
 
+    const errorDetails = selectedErrors.map((row) => ({
+      errorId: parseInt(row.errorId, 10),
+      comment: row.comments,
+      errorStatus: selectedAction,
+    }));
+
     const payload = {
       serverName: userDetails.serverName,
-      errorIds: selectedErrors.map((row) => parseInt(row.errorId, 10)),
-      comments: selectedErrors.map((row) => row.mesObject),
+      errorDetails: errorDetails,
     };
-    console.log("payload", payload);
+
     try {
-      // await ApiMethods.handleApiPostAction(
-      //   "",
-      //   "",
-      //   ERT_API_URLS.Open_Closed_Errors_URL,
-      //   "",
-      //   "Error in taking Action",
-      //   "",
-      //   setLoading,
-      //   handleRefreshPage,
-      //   0, // Retry count
-      //   payload,
-      //   uuid,
-      //   setUuid
-      // );
+      await ApiMethods.handleApiPostAction(
+        "",
+        "",
+        ERT_API_URLS.Change_Action_URL,
+        ~"",
+        "Error in taking Action",
+        "",
+        setLoading,
+        handleRefreshPage,
+        0, // Retry count
+        payload,
+        uuid,
+        setUuid
+      );
     } catch (error) {
       ErrorLogger(error);
     }
   };
 
   // Handle success after closing errors, fetch updated records
-  // const handleRefreshPage = async () => {
-  //   await handleFilteredData(
-  //     constructFilterURL(
-  //       `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`
-  //     )
-  //   );
-  // };
+  const handleRefreshPage = async () => {
+    setFilteredData([]);
+    setSelectedAction([]);
+    typeaheadRef.current.forEach((ref) => ref && ref.clear());
+    setActionEnable(false);
+    await handleFilteredData(
+      constructFilterURL(
+        `${ERT_API_URLS.Action_Errors_URL}?ServerName=${userDetails.serverName}`
+      )
+    );
+  };
 
   const handleReset = async () => {
     // Reset form data
@@ -229,7 +249,7 @@ const ActionReport = () => {
     setRanges([]);
 
     // Re-fetch the initial data (with no filters applied)
-    const initialURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=${userDetails.serverName}`;
+    const initialURL = `${ERT_API_URLS.Action_Errors_URL}?ServerName=${userDetails.serverName}`;
     await handleFilteredData(initialURL);
 
     // Optionally, reset pagination range if needed
@@ -277,8 +297,6 @@ const ActionReport = () => {
     });
   };
 
-  console.log("Errors", filteredData);
-
   // Grid columns with checkboxes
   const gridColumns = [
     {
@@ -294,16 +312,17 @@ const ActionReport = () => {
       accessor: "isChecked",
       Cell: (props) => <EditableCell {...props} type="checkbox" />,
     },
+    {
+      Header: "Comments",
+      accessor: "comments",
+      Cell: (props) => <EditableCell {...props} type="text" />,
+    },
     { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
-    //{ Header: "MES Object", accessor: "mesObject" },
-    {
-      Header: "MES Object",
-      accessor: "mesObject",
-      Cell: (props) => <EditableCell {...props} type="text" />,
-    },
+    { Header: "MES Object", accessor: "mesObject" },
+
     { Header: "MES Object Value", accessor: "mesObjectValue" },
     { Header: "Interface Type", accessor: "interfaceType" },
     { Header: "Error", accessor: "error" },
@@ -326,7 +345,7 @@ const ActionReport = () => {
         toast.info("No data to filter");
         return;
       }
-      let FilterURL = `${ERT_API_URLS.Closed_Errors_URL}?ServerName=192.168.1.33`;
+      let FilterURL = `${ERT_API_URLS.Action_Errors_URL}?ServerName=192.168.1.33`;
 
       // Append form data to URL
       Object.keys(formData).forEach((key) => {
@@ -351,7 +370,7 @@ const ActionReport = () => {
       );
       if (apiResponse !== null) {
         setAllDataCount(apiResponse["totalRecords"]);
-        setFilteredData(apiResponse["closedErrors"]);
+        setFilteredData(apiResponse["openErrors"]);
       } else {
         setAllDataCount("0");
         setFilteredData([]);
@@ -387,7 +406,7 @@ const ActionReport = () => {
         setLoading,
         (apiResponse) => {
           setAllDataCount(apiResponse.totalRecords || "0");
-          setFilteredData(apiResponse.closedErrors || []);
+          setFilteredData(apiResponse.openErrors || []);
         }
       );
     } catch (error) {
@@ -501,10 +520,11 @@ const ActionReport = () => {
           <Typeahead
             id="Actions"
             labelKey="label"
+            ref={(ref) => (typeaheadRef.current[0] = ref)}
             options={actions}
             filterBy={() => true}
             inputProps={{ readOnly: true }}
-            selected={formData.Action ? [{ label: formData.Action }] : []}
+            // selected={formData.Action ? [{ label: formData.Action }] : []}
             onChange={(selected) => handleDropdownChange(selected, "Action")}
             placeholder="Choose an Action..."
           />
@@ -629,7 +649,7 @@ const ActionReport = () => {
                       onChange={(selected) =>
                         handleDropdownChange(selected, "InterfaceType")
                       }
-                      placeholder="Choose an Interface Type..."
+                      placeholder="Choose an Interface Type"
                     />
                   </Form.Group>
 
@@ -716,16 +736,16 @@ const ActionReport = () => {
           />
         </div>
       </div>
-      {/* <div className="d-flex justify-content-end mt-2 gap-3 pt-2 ms-3 me-4 border-top border-subtle">
+      <div className="d-flex justify-content-end mt-2 gap-3 pt-2 ms-3 me-4 border-top border-subtle">
         <Button
-          id="close-errors-btn"
-          variant="outline-secondary"
+          id="download-excel-btn"
+          variant="outline-primary"
           size="sm"
-          onClick={handleActionError}
+          onClick={handleDownloadExcel}
         >
-          Action
+          Download Excel
         </Button>
-      </div> */}
+      </div>
     </div>
   );
 };

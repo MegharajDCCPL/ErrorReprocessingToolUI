@@ -40,7 +40,14 @@ const EditableCell = ({
     return <Form.Check checked={value} onChange={onChange} />;
   }
 
-  return <Form.Control value={value} onChange={onChange} onBlur={onBlur} />;
+  return (
+    <Form.Control
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      style={{ width: "10rem" }}
+    />
+  );
 };
 
 export default EditableCell;

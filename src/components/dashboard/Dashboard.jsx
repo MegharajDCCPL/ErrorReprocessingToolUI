@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import ChartsComponent from "../dashboard/ChartComponent";
-import TableUtility from "../common/modified-datatable/TableUtility";
+
 import ErrorStatsCard from "../dashboard/ErrorStatsCard";
 import ApiMethods from "../../utils/ApiMethods";
 import { ToastContainer } from "react-toastify";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
 import { useUser } from "../common/UserProvider";
-import GraphicalStats from "./GraphicalStats";
 
 const Dashboard = () => {
   const { setSelectedComponentName, userDetails } = useUser();
@@ -87,11 +86,8 @@ const Dashboard = () => {
       >
         <ErrorStatsCard className="ms-4" data={errorStats} />
       </div>
-      <div className="mt-3 me-2">
+      <div className="mt-2 me-2">
         <ChartsComponent />
-      </div>
-      <div>
-        <GraphicalStats data={errorStats} />
       </div>
     </div>
   );

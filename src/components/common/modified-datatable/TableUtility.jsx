@@ -202,9 +202,9 @@ const TableUtility = (props) => {
                 const statusValue = statusCell ? statusCell.value : null;
 
                 const rowStyle =
-                  statusValue === 9
+                  statusValue === "ReadyToClose"
                     ? { backgroundColor: "#ffcccc" }
-                    : statusValue === 13
+                    : statusValue === "ReadyToReprocess"
                     ? { backgroundColor: "#ffff99" }
                     : {};
                 return (

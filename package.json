@@ -37,6 +37,7 @@
     "react-toastify": "^10.0.6",
     "react-xml-viewer": "^2.0.4",
     "uuid": "^11.0.3",
+    "xlsx": "^0.18.5",
     "xml-formatter": "^3.6.3"
   },
   "devDependencies": {
