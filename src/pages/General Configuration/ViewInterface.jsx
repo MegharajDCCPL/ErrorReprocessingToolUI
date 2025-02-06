@@ -34,7 +34,7 @@ const ViewInterface = () => {
   const fetchInterfaceList = async () => {
     try {
       const response = await ApiMethods.handleApiGetAction(
-        ERT_API_URLS.InterfaceList_URL,
+        `${ERT_API_URLS.InterfaceList_URL}/15`, //serverId has to be updated once userdetails updated with server Id
         "Interface Not Found",
         0,
         setLoading,
@@ -58,22 +58,29 @@ const ViewInterface = () => {
       });
       handleClose;
     } catch (error) {
-      console.log(error);
+      ErrorLogger(error);
     }
   };
 
   const updateInterface = async (interfaceId, formData) => {
     const payload = {
-      interfaceName: formData.interfaceName,
-      interfaceType: formData.interfaceType,
-      description: formData.description,
+      serverId: userDetails?.serverId || 15, // server Id should be added once Nexus api is updated with that server
+      interfaceName:
+        formData.interfaceName !== currentRowData.interfaceName
+          ? formData.interfaceName
+          : "",
+      interfaceType:
+        formData.interfaceType !== currentRowData.interfaceType
+          ? formData.interfaceType
+          : "",
+      description:
+        formData.description !== currentRowData.description
+          ? formData.description
+          : "",
     };
-
     try {
       await ApiMethods.handleApiPatchAction(
         `${ERT_API_URLS.InterfaceList_URL}/${interfaceId}`,
-        // `https://localhost:7092/interface/${interfaceId}`,
-
         formData,
         "",
         retryPatchCount,
@@ -104,10 +111,14 @@ const ViewInterface = () => {
   };
 
   const gridColumns = [
-    { Header: "Interface Id", accessor: "interfaceId" },
+    { Header: "Interface Id", accessor: "interfaceId", show: false },
     { Header: "Interface Name", accessor: "interfaceName" },
     { Header: "Interface Type", accessor: "interfaceType" },
-    { Header: "Server Name", accessor: "serverId" },
+    { Header: "Server Name", accessor: "nxServerName" },
+    // {
+    //   Header: "Server Name",
+    //   Cell: () => <>{userDetails?.serverName || "N/A"}</>,
+    // },
     { Header: "Description", accessor: "description" },
     {
       Header: "Edit Interface",
@@ -133,7 +144,7 @@ const ViewInterface = () => {
       <div className="d-flex flex-column gap-3 ps-2 pe-2">
         <ToastContainer />
         <TableUtility
-          gridColumns={gridColumns}
+          gridColumns={gridColumns.filter((column) => column.show !== false)}
           gridData={gridData}
           pageSizes={[5, 10, 20]}
         />

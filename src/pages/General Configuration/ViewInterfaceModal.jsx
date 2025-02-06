@@ -17,7 +17,7 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
       setFormData({
         interfaceName: currentRowData.interfaceName || "",
         interfaceType: currentRowData.interfaceType || "",
-        serverName: currentRowData.serverId || "",
+        serverName: currentRowData.nxServerName || "",
         description: currentRowData.description || "",
       });
     }

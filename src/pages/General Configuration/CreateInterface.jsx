@@ -17,7 +17,6 @@ function CreateInterface() {
     interfaceType: "",
     description: "",
   });
-  console.log("userDetails", userDetails);
   const handleCreateInterface = async (e) => {
     e.preventDefault();
     if (!formData.interfaceName || !formData.interfaceType) {
@@ -31,8 +30,6 @@ function CreateInterface() {
       serverId: userDetails?.serverId || 15, // server Id should be added once Nexus api is updated with that server
       description: formData.description,
     };
-
-    console.log("Payload for create:", payload);
 
     try {
       setLoading(true);
