@@ -130,6 +130,7 @@ const LaunchComponent = () => {
           serverPort: server.serverPort,
           envColor: server.envColor,
           envName: server.envName,
+          serverId: server.serverId,
         }));
         setOptionApiRes(serverNames);
       } else {
@@ -165,6 +166,7 @@ const LaunchComponent = () => {
           serverPort: selected[0].serverPort,
           envColor: selected[0].envColor,
           envName: selected[0].envName,
+          serverId: selected[0].serverId,
         });
       }
     } catch (error) {
@@ -185,9 +187,10 @@ const LaunchComponent = () => {
       serverName: selectedServer.serverName,
       serverPort: appPort,
       utcOffset: selectedServer.utcOffset,
+      serverId: selectedServer.serverId,
     };
     setUserDetails(payload);
-
+    console.log("selectedServer sever Id ", selectedServer);
     try {
       const response = await ApiMethods.handleApiPostAction(
         "",
