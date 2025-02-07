@@ -34,7 +34,7 @@ const ViewInterface = () => {
   const fetchInterfaceList = async () => {
     try {
       const response = await ApiMethods.handleApiGetAction(
-        `${ERT_API_URLS.InterfaceList_URL}/15`, //serverId has to be updated once userdetails updated with server Id
+        `${ERT_API_URLS.InterfaceList_URL}/${userDetails.serverId}`, //serverId has to be updated once userdetails updated with server Id
         "Interface Not Found",
         0,
         setLoading,
@@ -64,7 +64,7 @@ const ViewInterface = () => {
 
   const updateInterface = async (interfaceId, formData) => {
     const payload = {
-      serverId: userDetails?.serverId || 15, // server Id should be added once Nexus api is updated with that server
+      serverId: userDetails?.serverId || 0, // server Id should be added once Nexus api is updated with that server
       interfaceName:
         formData.interfaceName !== currentRowData.interfaceName
           ? formData.interfaceName

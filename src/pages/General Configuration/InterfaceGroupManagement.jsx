@@ -10,8 +10,10 @@ import ErrorLogger from "../../components/common/ErrorLogger";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
+import { useUser } from "../../components/common/UserProvider.jsx";
 
 const InterfaceGroupManagement = () => {
+  const { userDetails } = useUser();
   const [formData, setFormData] = useState({
     interfaceId: null,
     interfaceName: "",
@@ -51,6 +53,9 @@ const InterfaceGroupManagement = () => {
         setLoading,
         setGridData
       );
+      if (response) {
+        setGridData(response); // Store grid users
+      }
     } catch (error) {
       ErrorLogger("Error fetching users:", error);
     } finally {
@@ -61,8 +66,7 @@ const InterfaceGroupManagement = () => {
   const fetchInterfaceList = async () => {
     await ApiMethods.handleApiGetAction(
       // ERT_API_URLS.InterfaceList_URL,
-      `${ERT_API_URLS.InterfaceList_URL}/15`, //serverId has to be updated once userdetails updated with server Id
-
+      `${ERT_API_URLS.InterfaceList_URL}/${userDetails.serverId}`,
       "Interface Not found",
       0,
       setLoading,
@@ -113,58 +117,6 @@ const InterfaceGroupManagement = () => {
     setSelectedUsers(selected);
   };
 
-  // const handleAddUser = () => {
-  //   const { interfaceId, userId, userName, emailId } = formData;
-
-  //   // Validate inputs
-  //   if (!interfaceId) {
-  //     toast.info("Please select an interface before adding a user.");
-  //     return;
-  //   }
-
-  //   if (!userId) {
-  //     toast.info("Please enter a username.");
-  //     return;
-  //   }
-
-  //   // Check for duplicate entries
-  //   if (gridData.some((user) => user.userId === userId)) {
-  //     toast.info("User already exists in the grid.");
-  //     return;
-  //   }
-
-  //   // Add the user to the grid data
-  //   setGridData((prevGridData) => [
-  //     ...prevGridData,
-  //     { interfaceId, userId, userName, emailId },
-  //   ]);
-
-  //   // Reset formData and typeahead
-  //   setFormData((prevFormData) => ({
-  //     ...prevFormData,
-  //     userId: null,
-  //     userName: "",
-  //     emailId: "",
-  //   }));
-
-  //   if (typeaheadUserRef.current) {
-  //     typeaheadUserRef.current.clear();
-  //   }
-
-  //   // Add user to the state for updates
-  //   setUsersToUpdate((prevUsersToUpdate) => [
-  //     ...prevUsersToUpdate,
-  //     {
-  //       interfaceId,
-  //       userId,
-  //       userName,
-  //       emailId,
-  //       isAdded: true,
-  //     },
-  //   ]);
-
-  //   // toast.success("User added successfully!");
-  // };
   const handleAddUser = () => {
     const { interfaceId, userId, userName, emailId } = formData;
 
@@ -200,48 +152,12 @@ const InterfaceGroupManagement = () => {
     }
   };
 
-  // const handleDeleteUser = (row) => {
-  //   try {
-  //     const userIdInGridToRemove = row.original.interfaceUserId;
-
-  //     // If `interfaceUserId` exists, add it to `interfaceUsersToRemove`
-  //     if (userIdInGridToRemove !== undefined) {
-  //       setInterfaceUsersToRemove((prevIds) => [
-  //         ...prevIds,
-  //         userIdInGridToRemove,
-  //       ]);
-  //     }
-
-  //     // Removing the specific user from `gridData`
-  //     const updatedGridUsers = gridData.filter(
-  //       (user, index) =>
-  //         !(
-  //           user.interfaceUserId === userIdInGridToRemove && index === row.index
-  //         )
-  //     );
-  //     setGridData(updatedGridUsers);
-
-  //     // Update `usersToUpdate` for added and deleted users
-  //     const updatedUsersToUpdate = usersToUpdate.map((user) => {
-  //       if (user.interfaceUserId === userIdInGridToRemove) {
-  //         if (user.isAdded) {
-  //           return { ...user, isAdded: undefined };
-  //         }
-  //         return { ...user, isDeleted: true };
-  //       }
-  //       return user;
-  //     });
-  //     setUsersToUpdate(updatedUsersToUpdate);
-  //   } catch (error) {
-  //     ErrorLogger(error);
-  //   }
-  // };
   const handleDeleteUser = (row) => {
     try {
-      const userIdToRemove = row.original.nxUserId; // Get the userId
+      const userIdToRemove = row.original.nxUserId;
 
       if (userIdToRemove !== undefined) {
-        setUserListToRemove((prev) => [...prev, userIdToRemove]); // Store userId
+        setUserListToRemove((prev) => [...prev, userIdToRemove]);
       }
 
       // Removing the specific user from `gridData`

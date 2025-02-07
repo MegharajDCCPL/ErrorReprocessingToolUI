@@ -27,10 +27,10 @@ function CreateInterface() {
       interfaceId: 0,
       interfaceName: formData.interfaceName,
       interfaceType: formData.interfaceType,
-      serverId: userDetails?.serverId || 15, // server Id should be added once Nexus api is updated with that server
+      serverId: userDetails?.serverId,
       description: formData.description,
     };
-
+    console.log("payload", payload);
     try {
       setLoading(true);
       await ApiMethods.handleApiPostAction(
