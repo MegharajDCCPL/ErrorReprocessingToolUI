@@ -29,7 +29,6 @@ const SideNavbar = () => {
       setLoading,
       setAppModules
     );
-    console.log("modules", moduleRes);
   };
 
   return (
