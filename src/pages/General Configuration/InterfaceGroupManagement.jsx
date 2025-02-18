@@ -85,7 +85,7 @@ const InterfaceGroupManagement = () => {
   const fetchUserList = async () => {
     await ApiMethods.handleApiGetAction(
       // `https://localhost:7092/interfaceUser/users`,
-      ERT_API_URLS.NX_Users_URL,
+      `${ERT_API_URLS.NX_Users_URL}/${userDetails.serverId}`,
       "Users Not Found",
       0,
       setLoading,
