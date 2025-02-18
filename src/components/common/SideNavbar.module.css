@@ -7,7 +7,7 @@
 }
 
 .side-navbar ul {
-  width: 13rem !important;
+  width: 15rem !important;
   list-style: none;
   padding: 0;
   margin-top: 0.5rem;
@@ -17,7 +17,7 @@
 
 .side-navbar ul li {
   cursor: pointer;
-  padding-left: 0.5rem;
+  padding-left: 2rem;
 }
 
 .side-navbar ul li a {
@@ -36,7 +36,7 @@
   color: var(--clr-white) !important;
   background-color: var(--clr-green-3) !important;
   border-radius: var(--bs-border-radius) !important;
-  width: 12.5rem;
+  width: 15rem;
 }
 
 .label {

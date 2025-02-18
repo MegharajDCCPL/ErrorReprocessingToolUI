@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "Sora";
+  src: url("../src/fonts/Sora-Regular.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+
 :root {
   --clr--bootstrap-btn: #0d6efd;
   --clr-green-3: #17424c;
@@ -22,7 +29,7 @@
 
   --sidebar-background-color: #0e282e;
 
-  --ff-primary: "Inter", sans-serif;
+  --ff-primary: "Sora";
   --ff-body: var(--ff-primary);
   --clr-green-6: #3391a6;
 }
@@ -154,4 +161,7 @@ a:not([class]) {
 }
 .custom-modal-footer {
   padding: 5px 20px 5px 20px !important;
+}
+.toastify-font-sora {
+  font-family: "Sora", sans-serif !important;
 }

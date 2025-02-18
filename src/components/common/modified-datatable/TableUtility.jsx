@@ -214,22 +214,22 @@ const TableUtility = (props) => {
                     style={rowStyle}
                     onDoubleClick={() => handleRowDoubleClick(row)}
                   >
-                    {row.cells.map((cell, index) => {
+                    {row.cells.map((cell) => {
                       const { key, ...restCellProps } = cell.getCellProps();
-                      // Check if the cell value contains XML
                       const cellValue = cell.value;
                       const isXML =
                         typeof cellValue === "string" &&
                         cellValue.startsWith("<") &&
                         cellValue.endsWith(">");
-                      const rowError = cell.column.Header === "Error";
+
+                      const isErrorColumn = cell.column.Header === "Error"; // Identify Error column
 
                       return (
                         <td
                           key={key}
                           {...restCellProps}
                           style={
-                            isXML || rowError
+                            isXML || isErrorColumn
                               ? {
                                   maxWidth: "200px",
                                   whiteSpace: "nowrap",
@@ -238,14 +238,18 @@ const TableUtility = (props) => {
                               : {}
                           }
                         >
-                          {isXML ? (
+                          {isXML || isErrorColumn ? (
                             <>
                               <div style={{ flex: 1, marginRight: "10px" }}>
                                 {cellValue.slice(0, 100)}...
                               </div>
                               <Button
                                 variant="link"
-                                onClick={() => handleShowXML(cellValue)}
+                                onClick={() =>
+                                  isXML
+                                    ? handleShowXML(cellValue)
+                                    : handleRowDoubleClick(row)
+                                }
                                 style={{ padding: "0", fontSize: "12px" }}
                               >
                                 Show More

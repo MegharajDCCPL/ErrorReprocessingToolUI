@@ -12,6 +12,7 @@ import { useUser } from "../../components/common/UserProvider.jsx";
 import ViewInterfaceModal from "./ViewInterfaceModal.jsx";
 
 const ViewInterface = () => {
+  const options = { className: "toastify-font-sora" };
   const [gridData, setGridData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [interfaceModule, setInterfaceModule] = useState(false);
@@ -45,7 +46,7 @@ const ViewInterface = () => {
       }
     } catch (error) {
       ErrorLogger(error);
-      toast.error("Error fetching interface list.");
+      toast.error("Error fetching interface list.", options);
     }
   };
   const resetForm = () => {
@@ -94,7 +95,7 @@ const ViewInterface = () => {
       fetchInterfaceList();
     } catch (error) {
       ErrorLogger(error);
-      toast.error("Error updating interface.");
+      toast.error("Error updating interface.", options);
     }
   };
 

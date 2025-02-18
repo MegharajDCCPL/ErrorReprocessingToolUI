@@ -11,11 +11,13 @@ import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
 import { v4 as uuidv4 } from "uuid";
-import { FaFilter } from "react-icons/fa";
+import { FaFilter, FaComment } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
+import CommentsModal from "../common/modified-datatable/CommentsModal";
 import * as XLSX from "xlsx";
 
 const Archive = () => {
+  const options = { className: "toastify-font-sora" };
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("archive");
@@ -61,9 +63,27 @@ const Archive = () => {
 
   const [isArchiveAuto, setIsArchiveAuto] = useState(false);
   const [archiveText, setArchiveText] = useState("");
+  const [commentsModalShow, setCommentsModalShow] = useState(false);
+  const [currentComment, setCurrentComment] = useState("");
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+
+  const handleShowComments = (comment, rowIndex) => {
+    setCurrentComment(comment);
+    setSelectedRowIndex(rowIndex);
+    setCommentsModalShow(true);
+  };
+
+  const handleSaveComment = (newComment) => {
+    if (selectedRowIndex !== null) {
+      const updatedData = [...filteredData];
+      updatedData[selectedRowIndex].comments = newComment;
+      setFilteredData(updatedData);
+    }
+  };
+
   const handleDownloadExcel = () => {
     if (!filteredData || filteredData.length === 0) {
-      toast.info("No data available to download");
+      toast.info("No data available to download", options);
       return;
     }
     const headers = gridColumns
@@ -238,7 +258,7 @@ const Archive = () => {
   const handleArchive = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
     if (selectedErrors.length === 0) {
-      toast.info("No errors selected for closing.");
+      toast.info("No errors selected for closing.", options);
       return;
     }
 
@@ -350,7 +370,19 @@ const Archive = () => {
     {
       Header: "Comments",
       accessor: "comments",
-      Cell: (props) => <EditableCell {...props} type="text" />,
+      Cell: ({ row }) => (
+        <div className="d-flex justify-content-center align-items-center">
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="d-flex align-items-center justify-content-center p-1 rounded-circle shadow-sm"
+            onClick={() => handleShowComments(row.original.comments, row.index)}
+            style={{ width: "30px", height: "30px" }}
+          >
+            <FaComment size={15} />
+          </Button>
+        </div>
+      ),
     },
     { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
@@ -376,7 +408,7 @@ const Archive = () => {
       const isDateRangeEmpty = startDate === null && endDate === null;
 
       if (isFormDataEmpty && isDateRangeEmpty) {
-        toast.info("No data to filter");
+        toast.info("No data to filter", options);
         return;
       }
       let FilterURL = `${ERT_API_URLS.Closed_Reprocess_Errors_URL}?ServerName=${userDetails.serverName}`;
@@ -772,6 +804,12 @@ const Archive = () => {
             setData={setFilteredData}
             pageSizes={[5, 10, 20]}
             customMethod={handleCheckboxChange}
+          />
+          <CommentsModal
+            show={commentsModalShow}
+            handleClose={() => setCommentsModalShow(false)}
+            initialComment={currentComment}
+            onSave={handleSaveComment}
           />
         </div>
       </div>

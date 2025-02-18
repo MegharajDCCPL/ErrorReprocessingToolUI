@@ -2,6 +2,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import styles from "./SideNavbar.module.css";
 import { useUser } from "../common/UserProvider";
 import { useEffect, useState } from "react";
+import reopenIcon from "../../assets/reopen.svg";
+import reprocessIcon from "../../assets/reprocess.svg";
+import archiveIcon from "../../assets/archive.svg";
+import purgeIcon from "../../assets/purge.svg";
+import dashboardIcon from "../../assets/dashboard.svg";
+import actionReportIcon from "../../assets/action-report.svg";
+import interfaceIcon from "../../assets/interface.svg";
+import interfaceGroupIcon from "../../assets/interface-group.svg";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 
@@ -47,7 +55,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("dashboard")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={dashboardIcon} />
             <NavLink to="dashboard">Graphs</NavLink>
           </li>
         )}
@@ -60,7 +68,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("actionreport")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={actionReportIcon} />
             <NavLink to="/actionreport">Actionable Report</NavLink>
           </li>
         )}
@@ -79,7 +87,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("reprocesserrors")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={reprocessIcon} />
             <NavLink to="/reprocesserrors">ReProcess Errors</NavLink>
           </li>
         )}
@@ -92,7 +100,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("reopenerrors")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={reopenIcon} />
             <NavLink to="/reopenerrors">ReOpen Errors</NavLink>
           </li>
         )}
@@ -105,7 +113,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("archive")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={archiveIcon} />
             <NavLink to="/archive">Archive </NavLink>
           </li>
         )}
@@ -118,7 +126,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("purge")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={purgeIcon} />
             <NavLink to="/purge">Purge </NavLink>
           </li>
         )}
@@ -135,7 +143,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("InterfaceManagement")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={interfaceIcon} />
             <NavLink to="/InterfaceManagement">Interface</NavLink>
           </li>
         )}
@@ -148,7 +156,7 @@ const SideNavbar = () => {
             } `}
             onClick={() => handleNavLinkClick("InterfaceGroupManagement")}
           >
-            <img className={`${styles["icon"]}`} src={""} />
+            <img className={`${styles["icon"]}`} src={interfaceGroupIcon} />
             <NavLink to="/InterfaceGroupManagement">Interface Group</NavLink>
           </li>
         )}

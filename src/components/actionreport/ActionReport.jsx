@@ -3,6 +3,7 @@ import TableUtility from "../common/modified-datatable/TableUtility";
 import EditableCell from "../common/modified-datatable/EditableCell";
 import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
@@ -10,11 +11,13 @@ import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
 import { v4 as uuidv4 } from "uuid";
-import { FaFilter } from "react-icons/fa";
+import { FaFilter, FaComment } from "react-icons/fa";
 import { useUser } from "../common/UserProvider";
+import CommentsModal from "../common/modified-datatable/CommentsModal";
 import * as XLSX from "xlsx";
 
 const ActionReport = () => {
+  const options = { className: "toastify-font-sora" };
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("actionreport");
@@ -53,9 +56,27 @@ const ActionReport = () => {
 
   const [actions, setActions] = useState([]);
   const [selectedAction, setSelectedAction] = useState([]);
+  const [commentsModalShow, setCommentsModalShow] = useState(false);
+  const [currentComment, setCurrentComment] = useState("");
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+
+  const handleShowComments = (comment, rowIndex) => {
+    setCurrentComment(comment);
+    setSelectedRowIndex(rowIndex);
+    setCommentsModalShow(true);
+  };
+
+  const handleSaveComment = (newComment) => {
+    if (selectedRowIndex !== null) {
+      const updatedData = [...filteredData];
+      updatedData[selectedRowIndex].comments = newComment;
+      setFilteredData(updatedData);
+    }
+  };
+
   const handleDownloadExcel = () => {
     if (!filteredData || filteredData.length === 0) {
-      toast.info("No data available to download");
+      toast.info("No data available to download", options);
       return;
     }
     const headers = gridColumns
@@ -79,6 +100,7 @@ const ActionReport = () => {
 
     XLSX.writeFile(wb, "Error_Data.xlsx");
   };
+
   useEffect(() => {
     const fetchActions = async () => {
       try {
@@ -175,7 +197,7 @@ const ActionReport = () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
 
     if (selectedErrors.length === 0) {
-      toast.info("No errors selected for Action.");
+      toast.info("No errors selected for Action.", options);
       return;
     }
 
@@ -315,14 +337,25 @@ const ActionReport = () => {
     {
       Header: "Comments",
       accessor: "comments",
-      Cell: (props) => <EditableCell {...props} type="text" />,
+      Cell: ({ row }) => (
+        <div className="d-flex justify-content-center align-items-center">
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="d-flex align-items-center justify-content-center p-1 rounded-circle shadow-sm"
+            onClick={() => handleShowComments(row.original.comments, row.index)}
+            style={{ width: "30px", height: "30px" }}
+          >
+            <FaComment size={15} />
+          </Button>
+        </div>
+      ),
     },
     { Header: "Error ID", accessor: "errorId", show: false },
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
     { Header: "MES Object", accessor: "mesObject" },
-
     { Header: "MES Object Value", accessor: "mesObjectValue" },
     { Header: "Interface Type", accessor: "interfaceType" },
     { Header: "Error", accessor: "error" },
@@ -342,7 +375,7 @@ const ActionReport = () => {
       const isDateRangeEmpty = startDate === null && endDate === null;
 
       if (isFormDataEmpty && isDateRangeEmpty) {
-        toast.info("No data to filter");
+        toast.info("No data to filter", options);
         return;
       }
       let FilterURL = `${ERT_API_URLS.Action_Errors_URL}?ServerName=192.168.1.33`;
@@ -477,7 +510,7 @@ const ActionReport = () => {
 
   return (
     <div className="">
-      <ToastContainer />
+      <ToastContainer className="toastify-font-sora" />
       <div className="d-flex flex-row flex-wrap align-items-center mt-2 mb-4 gap-3">
         <div>
           <label className="module-header" style={{ fontSize: "18px" }}>
@@ -733,6 +766,12 @@ const ActionReport = () => {
             setData={setFilteredData}
             pageSizes={[5, 10, 20]}
             customMethod={handleCheckboxChange}
+          />
+          <CommentsModal
+            show={commentsModalShow}
+            handleClose={() => setCommentsModalShow(false)}
+            initialComment={currentComment}
+            onSave={handleSaveComment}
           />
         </div>
       </div>
