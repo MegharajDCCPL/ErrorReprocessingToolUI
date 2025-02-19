@@ -1,24 +1,27 @@
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const showToast = (response) => {
   if (response) {
-    const { text, type } = response; // Adjust to match API response structure
+    const { text, type } = response;
+
+    const options = { className: "toastify-font-sora" };
 
     switch (type !== undefined && type.toLowerCase()) {
       case "error":
-        toast.error(text);
+        toast.error(text, options);
         break;
       case "success":
-        toast.success(text);
+        toast.success(text, options);
         break;
       case "info":
-        toast.info(text);
+        toast.info(text, options);
         break;
       case "warning":
-        toast.warn(text);
+        toast.warn(text, options);
         break;
       default:
-        toast(text);
+        toast(text, options);
         break;
     }
   } else {

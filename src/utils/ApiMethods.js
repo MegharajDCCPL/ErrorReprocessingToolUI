@@ -3,7 +3,8 @@ import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import ErrorLogger from "../components/common/ErrorLogger";
 import showToast from "./ToastMessages";
-
+import "react-toastify/dist/ReactToastify.css";
+const options = { className: "toastify-font-sora" };
 //general method for Post api action
 const handleApiPostAction = async (
   formData,
@@ -34,7 +35,7 @@ const handleApiPostAction = async (
     });
 
     if (Object.keys(postResponse.data).length != 1)
-      showToast(postResponse.data);
+      showToast(postResponse.data, options);
     retryCount = 0;
     setLoading(false);
     setUuid(uuidv4());
@@ -84,7 +85,7 @@ const handleApiPostAction = async (
         );
       } else {
         // Exceeded retry attempts, display network issue message
-        toast.error("Network issue. Please try again later.");
+        toast.error("Network issue. Please try again later.", options);
         // Set loading to false
         setLoading(false);
         setUuid(uuidv4());
@@ -93,21 +94,23 @@ const handleApiPostAction = async (
     // Handled errors
     else if (error.response) {
       if (error.response.status === 400) {
-        toast.error("Bad request. Please check your inputs.");
+        toast.error("Bad request. Please check your inputs.", options);
       } else if (error.response.status === 500) {
         toast.error(
-          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
+          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`,
+          options
         );
       } else if (error.response.status === 401) {
-        if (error.response.data) toast.error(error.response.data);
-        else toast.error("You are not authorized to make this request.");
-      } else showToast(error.response.data);
+        if (error.response.data) toast.error(error.response.data, options);
+        else
+          toast.error("You are not authorized to make this request.", options);
+      } else showToast(error.response.data, options);
       // Set loading to false
       setLoading(false);
       setUuid(uuidv4());
     } else {
       // toast.error(errorMessage);
-      showToast(errorMessage);
+      showToast(errorMessage, options);
     }
   }
 };
@@ -159,20 +162,22 @@ const handleApiGetAction = async (
         ); // Retry after 1 second
       } else {
         // Exceeded retry attempts, display network issue message
-        toast.error("Network issue. Please try again later.");
+        toast.error("Network issue. Please try again later.", options);
         setLoading(false);
       }
     } else if (error.response) {
       if (error.response.status === 500) {
         toast.error(
-          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
+          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`,
+          options
         );
       } else if (error.response.status === 401) {
-        if (error.response.data) showToast(error.response.data);
-        else toast.error("You are not authorized to make this request.");
-      } else if (error.response) showToast(error.response.data);
+        if (error.response.data) showToast(error.response.data, options);
+        else
+          toast.error("You are not authorized to make this request.", options);
+      } else if (error.response) showToast(error.response.data, options);
       else {
-        toast.error(errorMessage);
+        toast.error(errorMessage, options);
       }
 
       setLoading(false);
@@ -235,7 +240,7 @@ const handleApiGetLicenseCheck = async (
         ); // Retry after 1 second
       } else {
         // Exceeded retry attempts, display network issue message
-        toast.error("Network issue. Please try again later.");
+        toast.error("Network issue. Please try again later.", options);
         setLoading(false);
       }
     } else if (error.response) {
@@ -244,18 +249,20 @@ const handleApiGetLicenseCheck = async (
       }
       if (error.response.status === 204) {
         // toast.error(errorMessage);
-        showToast(errorMessage);
+        showToast(errorMessage, options);
       } else if (error.response.status === 500) {
         toast.error(
-          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
+          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`,
+          options
         );
       } else if (error.response.status === 401) {
         if (error.response.data) toast.error(error.response.data);
-        else toast.error("You are not authorized to make this request.");
+        else
+          toast.error("You are not authorized to make this request.", options);
       } else {
         toast.error(errorMessageWithoutStatus);
       }
-      showToast(error.response.data);
+      showToast(error.response.data, options);
       setLoading(false);
     }
     return null;
@@ -275,7 +282,7 @@ const handleApiDeleteAction = async (
   try {
     // Send request to API endpoint
     await axios["delete"](url, { withCredentials: true });
-    toast.success(successMessage);
+    toast.success(successMessage, options);
     setLoading(false);
     retryDeleteActionCount = 0;
     return true;
@@ -312,7 +319,7 @@ const handleApiDeleteAction = async (
         });
       } else {
         // Exceeded retry attempts, display network issue message
-        toast.error("Network issue. Please try again later.");
+        toast.error("Network issue. Please try again later.", options);
         setLoading(false);
         return false;
       }
@@ -329,16 +336,17 @@ const handleApiDeleteAction = async (
       // } else
       if (error.response.status === 500) {
         toast.error(
-          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
+          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`,
+          options
         );
       }
     } else if (error.response.status === 401) {
-      if (error.response.data) showToast(error.response.data);
-      else toast.error("You are not authorized to make this request.");
+      if (error.response.data) showToast(error.response.data, options);
+      else toast.error("You are not authorized to make this request.", options);
     } else {
-      showToast(error.response.data);
+      showToast(error.response.data, options);
     }
-    showToast(error.response.data);
+    showToast(error.response.data, options);
     setLoading(false);
   }
   return false;
@@ -369,7 +377,7 @@ const handleApiPatchAction = async (
         setErrors({});
       }
       if (successMessage) toast.success(successMessage);
-      else showToast(patchResponse.data);
+      else showToast(patchResponse.data, options);
 
       setLoading(false);
       retryPatchCount = 0;
@@ -416,21 +424,23 @@ const handleApiPatchAction = async (
         ); // Retry after 1 second
       } else {
         // Exceeded retry attempts, display network issue message
-        toast.error("Network issue. Please try again later.");
+        toast.error("Network issue. Please try again later.", options);
         setLoading(false);
       }
     } else if (error.response) {
       if (error.response.status === 500) {
         toast.error(
-          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`
+          `An error has occurred. ERROR : ${error.response.data} Please contact Administrator and check log files for more information.`,
+          options
         );
       } else if (error.response.status === 401) {
-        if (error.response.data) showToast(error.response.data);
-        else toast.error("You are not authorized to make this request.");
+        if (error.response.data) showToast(error.response.data, options);
+        else
+          toast.error("You are not authorized to make this request.", options);
       } else {
-        showToast(errorMessage);
+        showToast(errorMessage, options);
       }
-      showToast(error.response.data);
+      showToast(error.response.data, options);
       setLoading(false);
     }
     // Return null if the status is not 200
@@ -480,16 +490,17 @@ const handleApiGetLicenseAction = async (
             1000
           );
         } else {
-          toast.error("Network issue. Please try again later.");
+          toast.error("Network issue. Please try again later.", options);
           setLoading(false);
         }
       } else {
         // Handle other HTTP errors
         if (status === 204) {
-          showToast(errorMessage);
+          showToast(errorMessage, options);
         } else if (status === 500) {
           toast.error(
-            `An error has occurred. ERROR: ${data} Please contact Administrator and check log files for more information.`
+            `An error has occurred. ERROR: ${data} Please contact Administrator and check log files for more information.`,
+            options
           );
         } else if (status === 403 || status === 404) {
           let status = getStatusMessageFromError(data);
@@ -502,15 +513,19 @@ const handleApiGetLicenseAction = async (
             daysRemaining,
           });
         } else if (status === 401) {
-          if (data) toast.error(data);
-          else toast.error("You are not authorized to make this request.");
+          if (data) toast.error(data, options);
+          else
+            toast.error(
+              "You are not authorized to make this request.",
+              options
+            );
         } else {
-          toast.error(getStatusMessageFromError(data));
+          toast.error(getStatusMessageFromError(data), options);
         }
         setLoading(false);
       }
     } else {
-      toast.error("An unknown error occurred.");
+      toast.error("An unknown error occurred.", options);
       setLoading(false);
     }
     return null;

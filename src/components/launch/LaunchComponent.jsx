@@ -257,16 +257,20 @@ const LaunchComponent = () => {
       let defaultMenuName = moduleRes[0];
       if (moduleRes.includes("Graphs")) {
         defaultMenuName = "dashboard";
+      } else if (moduleRes.includes("Actionable Report")) {
+        defaultMenuName = "actionreport";
       } else if (moduleRes.includes("ReProcess Errors")) {
         defaultMenuName = "reprocesserrors";
       } else if (moduleRes.includes("ReOpen Errors")) {
-        defaultMenuName = "close";
-      } else if (moduleRes.includes("Archive Errors")) {
+        defaultMenuName = "reopenerrors";
+      } else if (moduleRes.includes("Archive")) {
         defaultMenuName = "archive";
-      } else if (moduleRes.includes("Purge Errors")) {
+      } else if (moduleRes.includes("Purge")) {
         defaultMenuName = "purge";
-      } else if (moduleRes.includes("Settings")) {
-        defaultMenuName = "settings";
+      } else if (moduleRes.includes("Interface")) {
+        defaultMenuName = "InterfaceManagement";
+      } else if (moduleRes.includes("Interface Group")) {
+        defaultMenuName = "InterfaceGroupManagement";
       }
       navigate(
         `/homepage/${defaultMenuName.toLowerCase().replace(/\s+/g, "-").trim()}`

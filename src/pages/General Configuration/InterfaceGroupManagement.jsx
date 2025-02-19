@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { useUser } from "../../components/common/UserProvider.jsx";
 
 const InterfaceGroupManagement = () => {
+  const options = { className: "toastify-font-sora" };
   const { userDetails } = useUser();
   const [formData, setFormData] = useState({
     interfaceId: null,
@@ -121,15 +122,15 @@ const InterfaceGroupManagement = () => {
     const { interfaceId, userId, userName, emailId } = formData;
 
     if (!interfaceId) {
-      toast.info("Please select an interface before adding a user.");
+      toast.info("Please select an interface before adding a user.", options);
       return;
     }
     if (!userId) {
-      toast.info("Please enter a username.");
+      toast.info("Please enter a username.", options);
       return;
     }
     if (gridData.some((user) => user.userId === userId)) {
-      toast.info("User already exists in the grid.");
+      toast.info("User already exists in the grid.", options);
       return;
     }
 
@@ -284,7 +285,7 @@ const InterfaceGroupManagement = () => {
         payload.nexusUserListToAdd.length === 0 &&
         payload.userListToRemove.length === 0
       ) {
-        toast.info("No changes to submit.");
+        toast.info("No changes to submit.", options);
         return;
       }
 

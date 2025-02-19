@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
 function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
+  const options = { className: "toastify-font-sora" };
   const [formData, setFormData] = useState({
     interfaceName: "",
     interfaceType: "",
@@ -30,7 +31,7 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.interfaceName || !formData.interfaceType) {
-      toast.error("Message Type Name and Type are required!");
+      toast.error("Message Type Name and Type are required", options);
       return;
     }
 
@@ -46,11 +47,17 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered backdrop="static">
-      <Modal.Header closeButton>
-        <Modal.Title>Edit Interface</Modal.Title>
+    <Modal
+      show={show}
+      onHide={onHide}
+      size="lg"
+      backdrop="static"
+      keyboard={false}
+    >
+      <Modal.Header className="custom-modal-header" closeButton>
+        <Modal.Title className="custom-modal-title">Edit Interface</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="custom-modal-body bg-light">
         <Form>
           <Form.Group controlId="interfaceName">
             <Form.Label>Message Type Name</Form.Label>
@@ -96,12 +103,12 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
           </Form.Group>
         </Form>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
+      <Modal.Footer className="custom-modal-footer d-flex">
+        <Button variant="outline-secondary" size="sm" onClick={onHide}>
           Close
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Save Changes
+        <Button variant="outline-success" size="sm" onClick={handleSubmit}>
+          Save
         </Button>
       </Modal.Footer>
     </Modal>

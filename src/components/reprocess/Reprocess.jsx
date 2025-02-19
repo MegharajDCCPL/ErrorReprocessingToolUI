@@ -10,12 +10,14 @@ import "react-datepicker/dist/react-datepicker.css";
 import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 import ErrorLogger from "../common/ErrorLogger";
-import { FaFilter, FaInfo } from "react-icons/fa";
+import { FaFilter, FaInfo, FaComment } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 import { useUser } from "../common/UserProvider";
+import CommentsModal from "../common/modified-datatable/CommentsModal";
 import * as XLSX from "xlsx";
 
 const Reprocess = () => {
+  const options = { className: "toastify-font-sora" };
   const { setSelectedComponentName, userDetails } = useUser();
   useEffect(() => {
     setSelectedComponentName("reprocesserrors");
@@ -51,10 +53,27 @@ const Reprocess = () => {
     { label: "Inbound" },
     { label: "Outbound" },
   ]);
+  const [commentsModalShow, setCommentsModalShow] = useState(false);
+  const [currentComment, setCurrentComment] = useState("");
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+
+  const handleShowComments = (comment, rowIndex) => {
+    setCurrentComment(comment);
+    setSelectedRowIndex(rowIndex);
+    setCommentsModalShow(true);
+  };
+
+  const handleSaveComment = (newComment) => {
+    if (selectedRowIndex !== null) {
+      const updatedData = [...filteredData];
+      updatedData[selectedRowIndex].comments = newComment;
+      setFilteredData(updatedData);
+    }
+  };
 
   const handleDownloadExcel = () => {
     if (!filteredData || filteredData.length === 0) {
-      toast.info("No data available to download");
+      toast.info("No data available to download", options);
       return;
     }
 
@@ -175,15 +194,69 @@ const Reprocess = () => {
     }));
   };
 
-  // Handle reprocessing selected errors
+  const showConfirmationToast = (message, onConfirm) => {
+    toast.info(
+      <div className={`${styles.Toastify_toast}`}>
+        <p className={`${styles.toastMessage}`}>{message}</p>
+        <div className={`${styles.buttonsContainer}`}>
+          <Button
+            id="toast-yes-btn"
+            size="sm"
+            variant="outline-primary"
+            onClick={() => {
+              toast.dismiss("confirmation-toast");
+              onConfirm();
+            }}
+          >
+            Yes
+          </Button>
+          <Button
+            id="toast-no-btn"
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => toast.dismiss("confirmation-toast")}
+          >
+            No
+          </Button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        toastId: "confirmation-toast",
+      }
+    );
+  };
+
   const handleReprocess = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
 
     if (selectedErrors.length === 0) {
-      toast.info("No messages selected for reprocessing.");
+      toast.info("No messages selected for reprocessing.", options);
       return;
     }
 
+    const hasReadyToClose = selectedErrors.some(
+      (row) => row.errorStatus === "ReadyToClose"
+    );
+
+    if (hasReadyToClose) {
+      showConfirmationToast(
+        "Some selected errors are Ready to Close. Do you still want to proceed with reprocessing?",
+        options,
+        () => proceedWithReprocessing(selectedErrors)
+      );
+      return;
+    }
+
+    await proceedWithReprocessing(selectedErrors);
+  };
+
+  const proceedWithReprocessing = async (selectedErrors) => {
     const payload = {
       serverName: userDetails.serverName,
       errorDetails: selectedErrors.map((error) => ({
@@ -212,15 +285,31 @@ const Reprocess = () => {
     }
   };
 
-  // Handle closing selected errors
   const handleCloseError = async () => {
     const selectedErrors = filteredData.filter((row) => row.isChecked);
 
     if (selectedErrors.length === 0) {
-      toast.info("No errors selected for closing.");
+      toast.info("No errors selected for closing.", options);
       return;
     }
 
+    const hasReadyToReprocess = selectedErrors.some(
+      (row) => row.errorStatus === "ReadyToReprocess"
+    );
+
+    if (hasReadyToReprocess) {
+      showConfirmationToast(
+        "Some selected errors are Ready to Reprocess. Do you still want to proceed with Closing?",
+        options,
+        () => proceedWithClosing(selectedErrors)
+      );
+      return;
+    }
+
+    await proceedWithClosing(selectedErrors);
+  };
+
+  const proceedWithClosing = async (selectedErrors) => {
     const payload = {
       serverName: userDetails.serverName,
       errorDetails: selectedErrors.map((error) => ({
@@ -239,7 +328,7 @@ const Reprocess = () => {
         "",
         setLoading,
         handleRefreshPage,
-        0, // Retry count
+        0,
         payload,
         uuid,
         setUuid
@@ -329,8 +418,21 @@ const Reprocess = () => {
     {
       Header: "Comments",
       accessor: "comments",
-      Cell: (props) => <EditableCell {...props} type="text" />,
+      Cell: ({ row }) => (
+        <div className="d-flex justify-content-center align-items-center">
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="d-flex align-items-center justify-content-center p-1 rounded-circle shadow-sm"
+            onClick={() => handleShowComments(row.original.comments, row.index)}
+            style={{ width: "30px", height: "30px" }}
+          >
+            <FaComment size={15} />
+          </Button>
+        </div>
+      ),
     },
+
     { Header: "Record Date", accessor: "recordDate" },
     { Header: "Message Type", accessor: "messageType" },
     { Header: "Message ID", accessor: "messageId" },
@@ -356,7 +458,7 @@ const Reprocess = () => {
       const isDateRangeEmpty = startDate === null && endDate === null;
 
       if (isFormDataEmpty && isDateRangeEmpty) {
-        toast.info("No data to filter");
+        toast.info("No data to filter", options);
         return;
       }
       let FilterURL = `${ERT_API_URLS.Open_Errors_URL}?ServerName=${userDetails.serverName}`;
@@ -737,6 +839,12 @@ const Reprocess = () => {
             pageSizes={[5, 10, 20]}
             customMethod={handleCheckboxChange}
             StatusColumnName={"errorStatus"}
+          />
+          <CommentsModal
+            show={commentsModalShow}
+            handleClose={() => setCommentsModalShow(false)}
+            initialComment={currentComment}
+            onSave={handleSaveComment}
           />
         </div>
       </div>

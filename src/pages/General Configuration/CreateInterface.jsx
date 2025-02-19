@@ -9,6 +9,7 @@ import ApiMethods from "../../utils/ApiMethods";
 import ERT_API_URLS from "../../utils/ERTConfig";
 
 function CreateInterface() {
+  const options = { className: "toastify-font-sora" };
   const { userDetails } = useUser();
   const [loading, setLoading] = useState(false);
   const [uuid, setUuid] = useState(uuidv4());
@@ -20,7 +21,7 @@ function CreateInterface() {
   const handleCreateInterface = async (e) => {
     e.preventDefault();
     if (!formData.interfaceName || !formData.interfaceType) {
-      toast.error("Message Type Name and Type are required!");
+      toast.error("Message Type Name and Type are required", options);
       return;
     }
     const payload = {
