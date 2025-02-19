@@ -17,12 +17,11 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
       setFormData({
         interfaceName: currentRowData.interfaceName || "",
         interfaceType: currentRowData.interfaceType || "",
-        serverName: currentRowData.nxServerName || "",
+        serverName: currentRowData.serverName || "",
         description: currentRowData.description || "",
       });
     }
   }, [currentRowData]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -76,14 +75,14 @@ function ViewInterfaceModal({ show, onHide, currentRowData, onUpdate }) {
               <option value="outbound">Outbound</option>
             </Form.Select>
           </Form.Group>
-          <Form.Group controlId="serverName" className="mt-3">
+          {/* <Form.Group controlId="serverName" className="mt-3">
             <Form.Label>Server Name</Form.Label>
             <Form.Control
               name="serverName"
               value={formData.serverName}
               readOnly
             />
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group controlId="description" className="mt-3">
             <Form.Label>Description</Form.Label>
             <Form.Control

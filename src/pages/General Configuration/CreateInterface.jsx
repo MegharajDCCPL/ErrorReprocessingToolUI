@@ -27,7 +27,7 @@ function CreateInterface() {
       interfaceId: 0,
       interfaceName: formData.interfaceName,
       interfaceType: formData.interfaceType,
-      serverId: userDetails?.serverId,
+      nxServerId: userDetails?.serverId,
       description: formData.description,
     };
     console.log("payload", payload);
@@ -47,6 +47,7 @@ function CreateInterface() {
         uuid,
         setUuid
       );
+      resetForm();
       // toast.success("Interface created successfully!");
     } catch (error) {
       ErrorLogger(error);
